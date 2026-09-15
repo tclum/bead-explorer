@@ -2,10 +2,20 @@
 
 ## Manifest
 
-`sources.json` (`manifestVersion: 1`) lists every document loaded into the corpus:
-`id, short, title, publisher, date, kind, url, expect_pages` (PDFs), optional
-`page_range` and `notes`. The ingest script fills each entry with `sha256`,
-`bytes`, `pages`, and `fetched_at` after downloading.
+`sources.json` (`manifestVersion: 1`) lists every document loaded into the
+corpus: `id, short, title, publisher, date, kind, url, expect_pages` (PDFs),
+optional `page_range` and `notes`. Two optional per-source knobs let a source
+tune HTML extraction without touching code:
+
+- `selector` (string, CSS): the content-container to extract from, tried
+  ahead of the built-in `.entry-content → article → main → body` fallback.
+- `strip` (array of CSS selectors): removed from the DOM *before* the
+  container is selected, on top of the built-in strip list (`script, style,
+  noscript, nav, header, footer, aside, form, iframe, [role=navigation],
+  .menu, .nav, .sidebar, .breadcrumb, .site-header, .site-footer, .skip-link`).
+
+The ingest script fills each entry with `sha256`, `bytes`, `pages`, and
+`fetched_at` after downloading.
 
 ## Raw originals are committed
 

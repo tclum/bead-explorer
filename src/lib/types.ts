@@ -11,6 +11,8 @@ export type Source = {
   expect_pages?: number;
   page_range?: [number, number];
   notes?: string;
+  selector?: string;
+  strip?: string[];
   sha256?: string;
   bytes?: number;
   pages?: number;

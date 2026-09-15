@@ -93,13 +93,17 @@ function extractHtmlText(bytes: Uint8Array, source: Source): string {
   $(
     "script, style, noscript, nav, header, footer, aside, form, iframe, [role=navigation], .menu, .nav, .sidebar, .breadcrumb, .site-header, .site-footer, .skip-link",
   ).remove();
-  let $root = $(".entry-content").first();
+  if (source.strip && source.strip.length > 0) {
+    for (const sel of source.strip) $(sel).remove();
+  }
+  let $root = source.selector ? $(source.selector).first() : $();
+  if ($root.length === 0) $root = $(".entry-content").first();
   if ($root.length === 0) $root = $("article").first();
   if ($root.length === 0) $root = $("main").first();
   if ($root.length === 0) $root = $("body").first();
   const blocks: string[] = [];
   $root
-    .find("p, h1, h2, h3, h4, h5, h6, li, blockquote, pre, tr, dt, dd, div")
+    .find("p, h1, h2, h3, h4, h5, h6, li, blockquote, pre, tr, dt, dd")
     .each((_i, el) => {
       const t = $(el).clone().find("script,style").remove().end().text().replace(/\s+/g, " ").trim();
       if (t.length > 0) blocks.push(t);
