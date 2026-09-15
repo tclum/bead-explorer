@@ -1,0 +1,14 @@
+{
+  "retrieved_at": "2026-09-15T19:40:19.701Z",
+  "queries": {
+    "state": "https://services8.arcgis.com/peDZJliSvYims39Q/arcgis/rest/services/FCC_Broadband_Data_Collection_December_2024_View/FeatureServer/0/query?where=StateAbbr%3D%27HI%27&outFields=*&returnGeometry=false&f=json",
+    "county": "https://services8.arcgis.com/peDZJliSvYims39Q/arcgis/rest/services/FCC_Broadband_Data_Collection_December_2024_View/FeatureServer/1/query?where=StateAbbr%3D%27HI%27&outFields=*&returnGeometry=false&f=json",
+    "layer_meta": "https://services8.arcgis.com/peDZJliSvYims39Q/arcgis/rest/services/FCC_Broadband_Data_Collection_December_2024_View/FeatureServer/1?f=json",
+    "item": "https://www.arcgis.com/sharing/rest/content/items/e1343efcefc344709057260ee57290a0?f=json"
+  },
+  "item_id": "e1343efcefc344709057260ee57290a0",
+  "layer_lastEditDate_ms": 1788899455498,
+  "layer_lastEditDate_iso": "2026-09-08T20:30:55.498Z",
+  "vintage_sentence": "December 2025",
+  "expected_vs_pulled_problems": []
+}
