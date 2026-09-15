@@ -45,6 +45,7 @@ export type VerifiedCitation = Citation & {
   page: number;
   url: string;
   page_url: string;
+  reattributed: boolean;
 };
 
 export type RetrievedChunk = {
@@ -57,6 +58,13 @@ export type RetrievedChunk = {
   page_url: string;
 };
 
+export type Usage = {
+  input_tokens: number;
+  output_tokens: number;
+  cache_creation_input_tokens: number;
+  cache_read_input_tokens: number;
+};
+
 export type GroundedResult = {
   question: string;
   answer: string;
@@ -67,6 +75,9 @@ export type GroundedResult = {
   retrieved: { id: string; doc: string; page: number; score: number }[];
   model: string;
   latency_ms: number;
+  retried: boolean;
+  uncovered_numbers: string[];
+  usage: Usage;
 };
 
 export type StatusItem = {

@@ -1,0 +1,176 @@
+{
+  "note": "Offline self-test for the assertion machinery. Corpus, retrieved lists, model outputs, and status inputs are all canned. Case (b) is the only one that hits verifyCitations for real; the driver applies verification and the 'no verified citation ⇒ refuse' rule before calling assertFixture.",
+  "corpus": [
+    { "id": "x:p1:1", "doc": "x", "page": 1, "text": "The Hawaiʻi allocation is $100 exactly, per Section 1.", "url": "http://x.example/", "page_url": "http://x.example/#page=1" },
+    { "id": "y:p1:1", "doc": "y", "page": 1, "text": "Coverage started in 2024 and covers 42 counties.", "url": "http://y.example/", "page_url": "http://y.example/#page=1" }
+  ],
+  "csvRows": [
+    { "GEOID": "15", "TotalBSLs": "100", "ServedBSLs": "60", "UnderservedBSLs": "10", "UnservedBSLs": "30" }
+  ],
+  "cases": [
+    {
+      "letter": "a",
+      "kind": "must_fail",
+      "reason": "cites the wrong document",
+      "fixture": { "id": "a", "question": "What is the allocation?", "expect": { "refuse": false, "cite": [["x", 1]], "answer_contains": [["$100"]] } },
+      "raw": {
+        "answer": "The allocation is $100.",
+        "refused": false,
+        "citations": [{ "passage_id": "y:p1:1", "quote": "Coverage started in 2024 and covers 42 counties." }]
+      },
+      "retrieved": [
+        { "id": "x:p1:1", "doc": "x", "page": 1, "text": "The Hawaiʻi allocation is $100 exactly, per Section 1.", "url": "http://x.example/", "page_url": "http://x.example/#page=1", "score": 3.1 },
+        { "id": "y:p1:1", "doc": "y", "page": 1, "text": "Coverage started in 2024 and covers 42 counties.", "url": "http://y.example/", "page_url": "http://y.example/#page=1", "score": 1.2 }
+      ]
+    },
+    {
+      "letter": "b",
+      "kind": "must_fail",
+      "reason": "citation quote absent from cited chunk — verifyCitations drops it, then no citation remains",
+      "fixture": { "id": "b", "question": "What is the allocation?", "expect": { "refuse": false, "cite": [["x", 1]], "answer_contains": [["$100"]] } },
+      "raw": {
+        "answer": "The allocation is $100.",
+        "refused": false,
+        "citations": [{ "passage_id": "x:p1:1", "quote": "THIS IS NOT IN THE CHUNK VERBATIM AT ALL" }]
+      },
+      "retrieved": [
+        { "id": "x:p1:1", "doc": "x", "page": 1, "text": "The Hawaiʻi allocation is $100 exactly, per Section 1.", "url": "http://x.example/", "page_url": "http://x.example/#page=1", "score": 3.1 }
+      ]
+    },
+    {
+      "letter": "c",
+      "kind": "must_fail",
+      "reason": "refused when an answer was expected",
+      "fixture": { "id": "c", "question": "What is the allocation?", "expect": { "refuse": false, "cite": [["x", 1]], "answer_contains": [["$100"]] } },
+      "raw": {
+        "answer": "",
+        "refused": true,
+        "refusal_reason": "not sure",
+        "citations": []
+      },
+      "retrieved": [
+        { "id": "x:p1:1", "doc": "x", "page": 1, "text": "The Hawaiʻi allocation is $100 exactly, per Section 1.", "url": "http://x.example/", "page_url": "http://x.example/#page=1", "score": 3.1 }
+      ]
+    },
+    {
+      "letter": "d",
+      "kind": "must_fail",
+      "reason": "answered when a refusal was expected",
+      "fixture": { "id": "d", "question": "What is Texas's allocation?", "expect": { "refuse": true } },
+      "raw": {
+        "answer": "The allocation is $100.",
+        "refused": false,
+        "citations": [{ "passage_id": "x:p1:1", "quote": "The Hawaiʻi allocation is $100 exactly" }]
+      },
+      "retrieved": [
+        { "id": "x:p1:1", "doc": "x", "page": 1, "text": "The Hawaiʻi allocation is $100 exactly, per Section 1.", "url": "http://x.example/", "page_url": "http://x.example/#page=1", "score": 3.1 }
+      ]
+    },
+    {
+      "letter": "e",
+      "kind": "must_fail",
+      "reason": "answer missing a required substring",
+      "fixture": { "id": "e", "question": "What is the allocation?", "expect": { "refuse": false, "cite": [["x", 1]], "answer_contains": [["$100"], ["specifically confirmed"]] } },
+      "raw": {
+        "answer": "The allocation is $100.",
+        "refused": false,
+        "citations": [{ "passage_id": "x:p1:1", "quote": "The Hawaiʻi allocation is $100 exactly" }]
+      },
+      "retrieved": [
+        { "id": "x:p1:1", "doc": "x", "page": 1, "text": "The Hawaiʻi allocation is $100 exactly, per Section 1.", "url": "http://x.example/", "page_url": "http://x.example/#page=1", "score": 3.1 }
+      ]
+    },
+    {
+      "letter": "f",
+      "kind": "must_fail",
+      "reason": "retrieval miss — expected [doc,page] not in retrieved list",
+      "fixture": { "id": "f", "question": "What is the allocation?", "expect": { "refuse": false, "cite": [["x", 1]], "answer_contains": [["$100"]] } },
+      "raw": {
+        "answer": "The allocation is $100.",
+        "refused": false,
+        "citations": [{ "passage_id": "y:p1:1", "quote": "Coverage started in 2024 and covers 42 counties." }]
+      },
+      "retrieved": [
+        { "id": "y:p1:1", "doc": "y", "page": 1, "text": "Coverage started in 2024 and covers 42 counties.", "url": "http://y.example/", "page_url": "http://y.example/#page=1", "score": 2.0 }
+      ]
+    },
+    {
+      "letter": "i",
+      "kind": "must_pass",
+      "reason": "a correct grounded answer",
+      "fixture": { "id": "i", "question": "What is the allocation?", "expect": { "refuse": false, "cite": [["x", 1]], "answer_contains": [["$100"]] } },
+      "raw": {
+        "answer": "The allocation is $100 exactly.",
+        "refused": false,
+        "citations": [{ "passage_id": "x:p1:1", "quote": "The Hawaiʻi allocation is $100 exactly" }]
+      },
+      "retrieved": [
+        { "id": "x:p1:1", "doc": "x", "page": 1, "text": "The Hawaiʻi allocation is $100 exactly, per Section 1.", "url": "http://x.example/", "page_url": "http://x.example/#page=1", "score": 3.1 }
+      ]
+    },
+    {
+      "letter": "j",
+      "kind": "must_pass",
+      "reason": "a correct refusal",
+      "fixture": { "id": "j", "question": "What is Texas's allocation?", "expect": { "refuse": true } },
+      "raw": {
+        "answer": "",
+        "refused": true,
+        "refusal_reason": "The corpus does not cover other states.",
+        "citations": []
+      },
+      "retrieved": [
+        { "id": "x:p1:1", "doc": "x", "page": 1, "text": "The Hawaiʻi allocation is $100 exactly, per Section 1.", "url": "http://x.example/", "page_url": "http://x.example/#page=1", "score": 3.1 }
+      ]
+    },
+    {
+      "letter": "l",
+      "kind": "must_fail",
+      "reason": "answer contains a figure absent from every verified quote (numbers coverage)",
+      "fixture": { "id": "l", "question": "What is the allocation and how many counties?", "expect": { "refuse": false, "cite": [["x", 1]], "answer_contains": [["$100"]] } },
+      "raw": {
+        "answer": "The allocation is $100 across 42 counties.",
+        "refused": false,
+        "citations": [{ "passage_id": "x:p1:1", "quote": "The Hawaiʻi allocation is $100 exactly" }]
+      },
+      "retrieved": [
+        { "id": "x:p1:1", "doc": "x", "page": 1, "text": "The Hawaiʻi allocation is $100 exactly, per Section 1.", "url": "http://x.example/", "page_url": "http://x.example/#page=1", "score": 3.1 }
+      ]
+    },
+    {
+      "letter": "m",
+      "kind": "must_pass",
+      "reason": "quote verbatim in a retrieved chunk other than the labeled one is kept with reattributed=true",
+      "fixture": { "id": "m", "question": "When did coverage start and how many counties are covered?", "expect": { "refuse": false, "cite": [["y", 1]], "answer_contains": [["2024"], ["42"]] } },
+      "raw": {
+        "answer": "Coverage started in 2024 with 42 counties.",
+        "refused": false,
+        "citations": [{ "passage_id": "x:p1:1", "quote": "Coverage started in 2024 and covers 42 counties" }]
+      },
+      "retrieved": [
+        { "id": "x:p1:1", "doc": "x", "page": 1, "text": "The Hawaiʻi allocation is $100 exactly, per Section 1.", "url": "http://x.example/", "page_url": "http://x.example/#page=1", "score": 3.1 },
+        { "id": "y:p1:1", "doc": "y", "page": 1, "text": "Coverage started in 2024 and covers 42 counties.", "url": "http://y.example/", "page_url": "http://y.example/#page=1", "score": 2.9 }
+      ]
+    }
+  ],
+  "statusCases": [
+    {
+      "letter": "g",
+      "kind": "must_fail",
+      "reason": "status item whose quote is not in the corpus",
+      "item": { "key": "g", "label": "Bogus", "value": "n/a", "source": { "doc": "x", "page": 1, "quote": "This quote is nowhere in the tiny canned corpus at all." } }
+    },
+    {
+      "letter": "h",
+      "kind": "must_fail",
+      "reason": "status CSV item whose column value differs",
+      "item": { "key": "h", "label": "FCC mismatch", "value": "n/a", "source": { "csv": "data/fcc-hi-summary.csv", "row": { "GEOID": "15" }, "columns": { "TotalBSLs": 999 } } }
+    },
+    {
+      "letter": "k",
+      "kind": "must_pass",
+      "reason": "a correct status item",
+      "item": { "key": "k", "label": "Allocation", "value": "$100", "source": { "doc": "x", "page": 1, "quote": "The Hawaiʻi allocation is $100 exactly" } }
+    }
+  ]
+}

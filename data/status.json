@@ -1,0 +1,13 @@
+{
+  "statusVersion": 1,
+  "items": [
+    { "key": "allocation", "label": "BEAD allocation", "value": "$149,484,493.57", "source": { "doc": "ipv2", "page": 105, "quote": "Hawaiʻi is allocated $149,484,493.57 under the BEAD Program" } },
+    { "key": "fp-approved", "label": "Final Proposal approved by NTIA", "value": "November 18, 2025", "source": { "doc": "uhbo-final-proposal", "page": 1, "quote": "Hawaiʻi received NTIA approval of its Final Proposal on November 18, 2025." } },
+    { "key": "locations", "label": "BEAD-funded locations (approved Final Proposal)", "value": "7,033", "detail": "5,748 fiber-to-the-premises (81.7%) · 1,285 LEO satellite (18.3%)", "source": { "doc": "ntia-fp-overview", "page": 1, "quote": "Locations: 7,033" } },
+    { "key": "deployment-cost", "label": "Approved BEAD deployment cost", "value": "$30,672,750", "detail": "Provider match $10,224,250 · savings vs. allocation $118,811,744", "source": { "doc": "ntia-fp-overview", "page": 1, "quote": "Total Deployment Cost: $30,672,750" } },
+    { "key": "subgrantees", "label": "Subgrantees", "value": "Hawaiian Telcom (fiber) · Amazon Leo (LEO satellite)", "detail": "Performance period: 4 years fiber, 10 years LEO", "source": { "doc": "ltgov-pr-2025-12-23", "page": 1, "quote": "The contracted performance period is four years for Hawaiian Telecom; 10 years for Amazon Leo." } },
+    { "key": "challenge", "label": "Challenge process", "value": "37,593 challenges received", "detail": "Held Aug 19 – Dec 7, 2024 · results approved by NTIA Dec 20, 2024", "source": { "doc": "uhbo-challenge", "page": 1, "quote": "Total Challenges Received – 37,593" } },
+    { "key": "deployment", "label": "Deployment", "value": "Construction phase (announced Aug 4, 2026)", "detail": "$34M Hawaiian Telcom contract · ~5,800 homes", "source": { "doc": "uh-news-2026-08-04", "page": 1, "quote": "Hawaiʻi has finalized a $34-million contract with Hawaiian Telcom to deliver fiber-optic service to approximately 5,800 homes" } },
+    { "key": "fcc-bdc", "label": "FCC BDC, statewide (availability as of Dec 31, 2025)", "value": "8,324 unserved · 458 underserved", "detail": "of 320,467 broadband serviceable locations", "source": { "csv": "data/fcc-hi-summary.csv", "row": { "GEOID": "15" }, "columns": { "UnservedBSLs": 8324, "UnderservedBSLs": 458, "TotalBSLs": 320467 }, "note": "FCC Broadband Data Collection via the Esri Living Atlas republication; see data/fcc-hi-summary.meta.json for retrieval date." } }
+  ]
+}
