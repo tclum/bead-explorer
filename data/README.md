@@ -58,3 +58,26 @@ paragraphs.
 - `fcc-hi-summary.csv` — FCC Broadband Data Collection Hawaiʻi state + county
   rows. Written by `pnpm fetch:fcc`.
 - `fcc-hi-summary.meta.json` — retrieval metadata for the CSV.
+- `bead-hi-project-areas.csv` — one row per BEAD Final Proposal county
+  project area (Hawaii, Honolulu, Kauai, Maui) with `unserved,
+  underserved, total, fiber, leo`. Written by `pnpm fetch:bead` from the
+  NTIA-approved `fp_locations_approved.xlsx` (7,009 rows). Gates enforced
+  in the fetch script and re-checked offline by `pnpm eval`:
+  - row count equals 7,009; classification ∈ {0,1}; technology ∈ {50,61}
+  - county totals sum to 7,009; unserved+underserved=6,632+377; per row
+    `unserved+underserved=total` and `fiber+leo=total`
+  - project_id suffix maps to county exactly (HAWAII→Hawaii, HONOLULU→Honolulu,
+    KAUAI→Kauai, MAUI→Maui); Kalawao is not a separate project area.
+- `bead-hi-project-areas.meta.json` — retrieval metadata (source URL,
+  sha256, bytes, `fetched_at`, code mappings, note on Kalawao).
+- `hi-counties.geojson` — Hawaiʻi's five counties as GeoJSON polygons.
+  Written by `pnpm fetch:geo` from Census TIGERweb (Generalized ACS2023).
+  Northwestern Hawaiian Islands rings of Honolulu County are removed (all
+  vertices west of longitude −160.6). Coordinates are rounded to five
+  decimals; only `GEOID` and `NAME` are kept. Gates: exactly five
+  features; GEOIDs are exactly 15001, 15003, 15005, 15007, 15009; file is
+  under 150 KB.
+- `hi-counties.meta.json` — retrieval metadata for the geojson.
+- `raw/fp_locations_approved.xlsx` — original NTIA Final Proposal
+  approved-locations workbook.
+- `raw/hi-counties-tigerweb.geojson` — original TIGERweb response.

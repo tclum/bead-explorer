@@ -36,6 +36,10 @@ yarn-error.log*
 # vercel
 .vercel
 
+# Claude Desktop's download destination when this folder is the chosen target;
+# holds transient prompt/artifact files, not project content.
+Claude outputs/
+
 # typescript
 *.tsbuildinfo
 next-env.d.ts

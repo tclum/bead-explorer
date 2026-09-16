@@ -1,0 +1,53 @@
+{
+  "source_url": "https://www.hawaii.edu/broadband/wp-content/uploads/sites/40/2026/01/fp_locations_approved.xlsx",
+  "raw_path": "data/raw/fp_locations_approved.xlsx",
+  "sha256": "36afde586673f0f98593814db7f3ad33722e17a07618a61aa3250c7c8224841a",
+  "bytes": 227142,
+  "fetched_at": "2026-09-16T09:41:42.369Z",
+  "row_count": 7009,
+  "classification_map": {
+    "0": "unserved",
+    "1": "underserved"
+  },
+  "technology_map": {
+    "50": "fiber",
+    "61": "leo"
+  },
+  "project_id_suffix_to_county": {
+    "HAWAII": "Hawaii",
+    "HONOLULU": "Honolulu",
+    "KAUAI": "Kauai",
+    "MAUI": "Maui"
+  },
+  "counties": {
+    "Hawaii": {
+      "unserved": 5012,
+      "underserved": 196,
+      "total": 5208,
+      "fiber": 4146,
+      "leo": 1062
+    },
+    "Honolulu": {
+      "unserved": 877,
+      "underserved": 20,
+      "total": 897,
+      "fiber": 881,
+      "leo": 16
+    },
+    "Kauai": {
+      "unserved": 141,
+      "underserved": 4,
+      "total": 145,
+      "fiber": 68,
+      "leo": 77
+    },
+    "Maui": {
+      "unserved": 602,
+      "underserved": 157,
+      "total": 759,
+      "fiber": 629,
+      "leo": 130
+    }
+  },
+  "note": "Counts approved-funded locations in NTIA-approved BEAD Final Proposal project areas. Kalawao County is not a separate project area; its BSLs fall under Maui project areas."
+}

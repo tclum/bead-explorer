@@ -11,10 +11,38 @@ FCC, or any vendor. Public data only.
 
 - Loads a small corpus of public government PDFs and HTML pages about
   Hawaiʻi's BEAD program.
-- Serves a one-screen UI with a program-status panel and a Q&A input.
+- Serves a one-screen UI with a program-status panel, a "Where the gaps
+  are" section (county map + two-series table), and a Q&A input.
 - Answers only from the loaded corpus. Every answer includes verbatim quote
   receipts with links back to the source page.
 - Refuses when the corpus does not contain the answer.
+
+## Where the gaps are
+
+The section between the status panel and the Ask box renders two views of
+Hawaiʻi's unserved/underserved picture, each derived from a committed CSV
+with a recorded source URL, sha256, and retrieval date:
+
+- **FCC BDC — availability as of Dec 31, 2025.** State + county rows pulled
+  by `pnpm fetch:fcc` from the Esri Living Atlas republication of the FCC
+  Broadband Data Collection (see `data/fcc-hi-summary.meta.json`). The
+  county map is a server-rendered inline SVG choropleth shaded by the
+  unserved share (unserved ÷ total BSLs).
+- **BEAD Final Proposal — Dec 31, 2024 fabric.** Approved-funded project
+  areas pulled by `pnpm fetch:bead` from
+  <https://www.hawaii.edu/broadband/wp-content/uploads/sites/40/2026/01/fp_locations_approved.xlsx>
+  (7,009 rows). The script aggregates project_id suffix → county
+  (HAWAII/HONOLULU/KAUAI/MAUI), classification 0=unserved · 1=underserved,
+  technology 50=fiber · 61=LEO. Kalawao is not a separate BEAD project
+  area; its BSLs fall under Maui project areas.
+- **County geometry** is fetched by `pnpm fetch:geo` from Census TIGERweb
+  (Generalized ACS2023). The Northwestern Hawaiian Islands rings of
+  Honolulu County are dropped (all vertices west of longitude −160.6) so
+  the map frames the main island chain.
+
+The two series use different location fabrics and definitions (FCC
+serviceable-location tiers vs. NTIA's approved BEAD-eligible list after
+the challenge process); their counts are not additive across series.
 
 ## How provenance is enforced
 
@@ -134,6 +162,8 @@ pnpm install
 #   ANTHROPIC_MODEL=claude-sonnet-5   # optional override
 pnpm ingest        # extract corpus.json from data/raw/
 pnpm fetch:fcc     # refresh data/fcc-hi-summary.csv
+pnpm fetch:bead    # refresh data/bead-hi-project-areas.csv
+pnpm fetch:geo     # refresh data/hi-counties.geojson
 pnpm dev           # http://localhost:3000
 pnpm eval          # live eval (needs API key)
 pnpm eval --selftest  # offline assertion self-test

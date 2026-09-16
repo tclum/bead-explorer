@@ -4,10 +4,31 @@ import path from "node:path";
 import { assertFixture, type Fixture } from "../src/lib/assert";
 import type { GroundedResult } from "../src/lib/types";
 
-const SMOKE_VERSION = "smoke v0.2.0";
+const SMOKE_VERSION = "smoke v0.3.0";
 const ROOT = process.cwd();
 const FIXTURES_PATH = path.join(ROOT, "eval", "fixtures.json");
+const FCC_CSV_PATH = path.join(ROOT, "data", "fcc-hi-summary.csv");
+const BEAD_CSV_PATH = path.join(ROOT, "data", "bead-hi-project-areas.csv");
 const TIMEOUT_MS = 45_000;
+
+const COUNTY_GEOIDS = ["15001", "15003", "15005", "15007", "15009"];
+const COUNT_FORMATTER = new Intl.NumberFormat("en-US", { useGrouping: true, maximumFractionDigits: 0 });
+function formatCount(n: number): string {
+  return COUNT_FORMATTER.format(n);
+}
+function parseCsv(text: string): Record<string, string>[] {
+  const lines = text.trim().split(/\r?\n/);
+  if (lines.length < 2) return [];
+  const headers = lines[0].split(",");
+  const rows: Record<string, string>[] = [];
+  for (let i = 1; i < lines.length; i += 1) {
+    const cells = lines[i].split(",");
+    const row: Record<string, string> = {};
+    for (let j = 0; j < headers.length; j += 1) row[headers[j]] = cells[j] ?? "";
+    rows.push(row);
+  }
+  return rows;
+}
 
 const buffer: string[] = [];
 function bufLog(s: string) {
@@ -47,6 +68,24 @@ type VersionInfo = { sha: string; built_at: string };
 type VersionResult =
   | { ok: true; info: VersionInfo }
   | { ok: false; error: string };
+
+type PageResult = { ok: true; body: string } | { ok: false; error: string };
+
+async function fetchRoot(baseUrl: string): Promise<PageResult> {
+  const url = new URL("/", baseUrl).toString();
+  const ac = new AbortController();
+  const t = setTimeout(() => ac.abort(), TIMEOUT_MS);
+  try {
+    const res = await fetch(url, { signal: ac.signal });
+    if (!res.ok) return { ok: false, error: `HTTP ${res.status}` };
+    const body = await res.text();
+    return { ok: true, body };
+  } catch (e) {
+    return { ok: false, error: e instanceof Error ? e.message : String(e) };
+  } finally {
+    clearTimeout(t);
+  }
+}
 
 async function fetchVersion(baseUrl: string): Promise<VersionResult> {
   const url = new URL("/api/version", baseUrl).toString();
@@ -159,6 +198,37 @@ async function main() {
     if (!a.ok) {
       failures += 1;
       bufLog(`  reasons: ${a.reasons.join("; ")}`);
+    }
+  }
+
+  // Check 3: GET / — the page must contain the formatted FCC unserved count for
+  // every county and the formatted BEAD total for every project area, values
+  // read at run time from the committed CSVs so the probe is data-driven.
+  const page = await fetchRoot(baseUrl!);
+  if (!page.ok) {
+    bufLog(`FAIL / fetch: ${page.error}`);
+    failures += 1;
+  } else {
+    const fccRows = parseCsv(readFileSync(FCC_CSV_PATH, "utf8"));
+    const beadRows = parseCsv(readFileSync(BEAD_CSV_PATH, "utf8"));
+    const fccExpect = COUNTY_GEOIDS.map((geoid) => {
+      const row = fccRows.find((r) => r["GEOID"] === geoid);
+      if (!row) throw new Error(`smoke: FCC CSV missing GEOID ${geoid}`);
+      return { geoid, unserved: formatCount(Number(row["UnservedBSLs"])) };
+    });
+    const beadExpect = beadRows.map((row) => ({ county: row["county"], total: formatCount(Number(row["total"])) }));
+    const missing: string[] = [];
+    for (const e of fccExpect) {
+      if (!page.body.includes(e.unserved)) missing.push(`FCC ${e.geoid} unserved="${e.unserved}"`);
+    }
+    for (const e of beadExpect) {
+      if (!page.body.includes(e.total)) missing.push(`BEAD ${e.county} total="${e.total}"`);
+    }
+    if (missing.length === 0) {
+      bufLog(`PASS / fcc_counties=${fccExpect.length} bead_areas=${beadExpect.length}`);
+    } else {
+      failures += 1;
+      bufLog(`FAIL / missing ${missing.length}: ${missing.join("; ")}`);
     }
   }
 

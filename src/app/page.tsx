@@ -1,4 +1,5 @@
 import StatusPanel from "@/components/StatusPanel";
+import GapPanel from "@/components/GapPanel";
 import AskPanel from "@/components/AskPanel";
 import CorpusList from "@/components/CorpusList";
 
@@ -19,6 +20,7 @@ export default function Home() {
         </p>
       </header>
       <StatusPanel />
+      <GapPanel />
       <AskPanel />
       <CorpusList />
       <footer className="mt-4 flex flex-col gap-1 text-xs text-zinc-500">

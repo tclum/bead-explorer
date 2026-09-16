@@ -110,6 +110,80 @@ export function assertFixture(
   return { ok, checks, reasons, uncovered_numbers: uncovered, figures_found: [] };
 }
 
+export function assertBeadProjectAreas(
+  csvText: string,
+  expectedRowCount: number,
+): { ok: boolean; reason?: string } {
+  const lines = csvText.trim().split(/\r?\n/);
+  if (lines.length < 2) return { ok: false, reason: "bead csv has no rows" };
+  const headers = lines[0].split(",");
+  const required = ["county", "unserved", "underserved", "total", "fiber", "leo"];
+  for (const r of required) {
+    if (!headers.includes(r)) return { ok: false, reason: `bead csv missing column ${r}` };
+  }
+  let sumTotal = 0;
+  for (let i = 1; i < lines.length; i += 1) {
+    const cells = lines[i].split(",");
+    const row: Record<string, string> = {};
+    for (let j = 0; j < headers.length; j += 1) row[headers[j]] = cells[j] ?? "";
+    const unserved = Number(row["unserved"]);
+    const underserved = Number(row["underserved"]);
+    const total = Number(row["total"]);
+    const fiber = Number(row["fiber"]);
+    const leo = Number(row["leo"]);
+    if (![unserved, underserved, total, fiber, leo].every(Number.isFinite)) {
+      return { ok: false, reason: `bead csv non-numeric cells in row ${row["county"] ?? i}` };
+    }
+    if (unserved + underserved !== total) {
+      return {
+        ok: false,
+        reason: `bead csv ${row["county"]}: unserved(${unserved}) + underserved(${underserved}) != total(${total})`,
+      };
+    }
+    if (fiber + leo !== total) {
+      return {
+        ok: false,
+        reason: `bead csv ${row["county"]}: fiber(${fiber}) + leo(${leo}) != total(${total})`,
+      };
+    }
+    sumTotal += total;
+  }
+  if (sumTotal !== expectedRowCount) {
+    return {
+      ok: false,
+      reason: `bead csv county totals sum to ${sumTotal}, expected row_count ${expectedRowCount}`,
+    };
+  }
+  return { ok: true };
+}
+
+export function assertCountyGeojson(
+  geojsonText: string,
+  expectedGeoids: string[],
+): { ok: boolean; reason?: string } {
+  let parsed: { type?: string; features?: { properties?: { GEOID?: string } | null }[] };
+  try {
+    parsed = JSON.parse(geojsonText) as typeof parsed;
+  } catch (e) {
+    return { ok: false, reason: `geojson invalid JSON: ${(e as Error).message}` };
+  }
+  if (parsed.type !== "FeatureCollection" || !Array.isArray(parsed.features)) {
+    return { ok: false, reason: "geojson is not a FeatureCollection" };
+  }
+  if (parsed.features.length !== expectedGeoids.length) {
+    return {
+      ok: false,
+      reason: `geojson feature count ${parsed.features.length} != ${expectedGeoids.length}`,
+    };
+  }
+  const got = parsed.features.map((f) => String(f.properties?.GEOID ?? "")).sort();
+  const want = [...expectedGeoids].sort();
+  if (got.join(",") !== want.join(",")) {
+    return { ok: false, reason: `geojson GEOIDs [${got.join(",")}] != [${want.join(",")}]` };
+  }
+  return { ok: true };
+}
+
 export function assertStatusItem(
   item: StatusItem,
   index: CorpusIndex,

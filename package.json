@@ -11,6 +11,8 @@
     "test": "vitest run",
     "ingest": "tsx scripts/ingest.ts",
     "fetch:fcc": "tsx scripts/fetch-fcc.ts",
+    "fetch:bead": "tsx scripts/fetch-bead.ts",
+    "fetch:geo": "tsx scripts/fetch-geo.ts",
     "eval": "tsx scripts/eval.ts",
     "ask": "tsx scripts/ask.ts",
     "smoke": "tsx scripts/smoke.ts"
@@ -22,7 +24,8 @@
     "next": "15.5.25",
     "react": "19.1.0",
     "react-dom": "19.1.0",
-    "unpdf": "1.8.1"
+    "unpdf": "1.8.1",
+    "xlsx": "0.18.5"
   },
   "devDependencies": {
     "@eslint/eslintrc": "3.3.7",

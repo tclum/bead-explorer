@@ -1,0 +1,31 @@
+{
+  "source_url": "https://tigerweb.geo.census.gov/arcgis/rest/services/Generalized_ACS2023/State_County/MapServer/11/query?where=STATE%3D%2715%27&outFields=GEOID,STATE,COUNTY,NAME,BASENAME,AREALAND,AREAWATER&outSR=4326&f=geojson",
+  "raw_path": "data/raw/hi-counties-tigerweb.geojson",
+  "raw_sha256": "4f743b0bbf10ce5357a0c5d43e6bd4019699359a178b0d5a79c1075291e62172",
+  "raw_bytes": 121840,
+  "output_path": "data/hi-counties.geojson",
+  "output_sha256": "2dc1a12e1241173aa0f339817a07db2fb211e7f5f601b3291a6bb94b123f758e",
+  "output_bytes": 62462,
+  "fetched_at": "2026-09-16T09:41:53.597Z",
+  "feature_count": 5,
+  "geoids": [
+    "15001",
+    "15003",
+    "15005",
+    "15007",
+    "15009"
+  ],
+  "filter_rule": "drop every ring of Honolulu County (GEOID 15003) whose vertices all lie west of longitude -160.6 to omit the Northwestern Hawaiian Islands",
+  "coordinate_precision_decimals": 5,
+  "properties_kept": [
+    "GEOID",
+    "NAME"
+  ],
+  "dropped_rings_by_geoid": {
+    "15001": 0,
+    "15003": 15,
+    "15005": 0,
+    "15007": 0,
+    "15009": 0
+  }
+}

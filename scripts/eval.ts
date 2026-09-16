@@ -1,6 +1,13 @@
 import { readFileSync, existsSync } from "node:fs";
 import path from "node:path";
-import { assertFixture, assertStatusItem, buildCorpusIndex, type Fixture } from "../src/lib/assert";
+import {
+  assertBeadProjectAreas,
+  assertCountyGeojson,
+  assertFixture,
+  assertStatusItem,
+  buildCorpusIndex,
+  type Fixture,
+} from "../src/lib/assert";
 import { verifyCitations, withholdUncoveredSentences } from "../src/lib/verify";
 import type { Corpus, GroundedResult, RetrievedChunk, StatusFile, Usage, VerifiedCitation, Citation, StatusItem } from "../src/lib/types";
 
@@ -10,6 +17,10 @@ const STATUS_PATH = path.join(ROOT, "data", "status.json");
 const FIXTURES_PATH = path.join(ROOT, "eval", "fixtures.json");
 const SELFTEST_PATH = path.join(ROOT, "eval", "selftest.json");
 const FCC_CSV_PATH = path.join(ROOT, "data", "fcc-hi-summary.csv");
+const BEAD_CSV_PATH = path.join(ROOT, "data", "bead-hi-project-areas.csv");
+const BEAD_META_PATH = path.join(ROOT, "data", "bead-hi-project-areas.meta.json");
+const GEOJSON_PATH = path.join(ROOT, "data", "hi-counties.geojson");
+const EXPECTED_HI_GEOIDS = ["15001", "15003", "15005", "15007", "15009"];
 const ENV_LOCAL_PATH = path.join(ROOT, ".env.local");
 const EVAL_VERSION = "eval v0.1.0";
 
@@ -123,11 +134,20 @@ async function selftest(): Promise<never> {
     reason: string;
     item: StatusItem;
   };
+  type DataCase = {
+    letter: string;
+    kind: "must_pass" | "must_fail";
+    reason: string;
+    kind_check: "bead-project-areas";
+    csv: string;
+    expected_row_count: number;
+  };
   const raw = JSON.parse(readFileSync(SELFTEST_PATH, "utf8")) as {
     corpus: { id: string; doc: string; page: number; text: string; url: string; page_url: string }[];
     csvRows: Record<string, string>[];
     cases: Case[];
     statusCases: StatusCase[];
+    dataCases?: DataCase[];
   };
   const corpusIndex = buildCorpusIndex(raw.corpus.map((c) => ({ ...c })));
 
@@ -198,6 +218,19 @@ async function selftest(): Promise<never> {
     const misbehave = behaved ? "" : "  <<< MISBEHAVED";
     bufLog(`${tag} case=${sc.letter} kind=${sc.kind} assertOk=${a.ok} reason=${sc.reason}${a.reason ? ` [${a.reason}]` : ""}${misbehave}`);
     if (!behaved) misbehavers.push(sc.letter);
+  }
+  for (const dc of raw.dataCases ?? []) {
+    let a: { ok: boolean; reason?: string };
+    if (dc.kind_check === "bead-project-areas") {
+      a = assertBeadProjectAreas(dc.csv, dc.expected_row_count);
+    } else {
+      a = { ok: false, reason: `unknown data-case kind ${dc.kind_check}` };
+    }
+    const behaved = dc.kind === "must_pass" ? a.ok : !a.ok;
+    const tag = behaved ? "PASS" : "FAIL";
+    const misbehave = behaved ? "" : "  <<< MISBEHAVED";
+    bufLog(`${tag} case=${dc.letter} kind=${dc.kind} assertOk=${a.ok} reason=${dc.reason}${a.reason ? ` [${a.reason}]` : ""}${misbehave}`);
+    if (!behaved) misbehavers.push(dc.letter);
   }
   if (misbehavers.length === 0) {
     buffer.unshift("RESULT: pass");
@@ -273,6 +306,38 @@ async function main() {
     } else {
       bufLog(`PASS ${f.id} offline: all cite pairs exist in corpus`);
     }
+  }
+
+  // Offline: BEAD project-areas CSV sums
+  if (existsSync(BEAD_CSV_PATH) && existsSync(BEAD_META_PATH)) {
+    const beadText = readFileSync(BEAD_CSV_PATH, "utf8");
+    const beadMeta = JSON.parse(readFileSync(BEAD_META_PATH, "utf8")) as { row_count?: number };
+    const expected = typeof beadMeta.row_count === "number" ? beadMeta.row_count : -1;
+    const a = assertBeadProjectAreas(beadText, expected);
+    if (a.ok) {
+      bufLog("PASS data bead-project-areas");
+    } else {
+      failures.push("data bead-project-areas");
+      bufLog(`FAIL data bead-project-areas reason=${a.reason}`);
+    }
+  } else {
+    failures.push("data bead-project-areas");
+    bufLog("FAIL data bead-project-areas reason=missing CSV or meta");
+  }
+
+  // Offline: county GeoJSON feature count and GEOIDs
+  if (existsSync(GEOJSON_PATH)) {
+    const geoText = readFileSync(GEOJSON_PATH, "utf8");
+    const a = assertCountyGeojson(geoText, EXPECTED_HI_GEOIDS);
+    if (a.ok) {
+      bufLog("PASS data hi-counties");
+    } else {
+      failures.push("data hi-counties");
+      bufLog(`FAIL data hi-counties reason=${a.reason}`);
+    }
+  } else {
+    failures.push("data hi-counties");
+    bufLog("FAIL data hi-counties reason=missing data/hi-counties.geojson");
   }
 
   // Offline: status items (always run — status is not fixture-scoped)

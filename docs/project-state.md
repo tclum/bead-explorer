@@ -34,6 +34,19 @@ documents with per-value provenance, gated by an eval harness.
   server-only (`--debug` on `pnpm ask` opts in). UI: one-liner under the
   answer. Eval: per-fixture `withheld=N`. Selftest cases `u`/`v` lock
   the contract.
+- **2026-09-16** — Slice 2: "Where the gaps are" section between the
+  status panel and the Ask box. Inline SVG county choropleth shaded by
+  the FCC BDC unserved share, two-series table (FCC BDC Dec 2025 beside
+  BEAD Final Proposal Dec 2024 project areas), footnote on definitions,
+  receipts disclosure. New fetch scripts `pnpm fetch:bead` (parses the
+  NTIA-approved `fp_locations_approved.xlsx`, 7,009 rows, into
+  `data/bead-hi-project-areas.csv` with hard gates) and `pnpm fetch:geo`
+  (pulls Hawaiʻi county polygons from Census TIGERweb, drops the
+  Northwestern Hawaiian Islands rings). Shared `formatCount` helper so
+  map, table, and smoke agree byte for byte. Eval offline: two new
+  `PASS data` lines plus selftest case `w` (must fail). Smoke: third
+  probe `GET /` verifies every county's FCC unserved and every project
+  area's BEAD total appear on the page; bumped to `smoke v0.3.0`.
 
 See `docs/findings-provenance.md` for the durable lessons behind these
 entries (chunker, verification, retry rules, retrieval, cost).
@@ -70,7 +83,6 @@ entries (chunker, verification, retry rules, retrieval, cost).
 
 ## Not yet specified
 
-- Slice 2 map/chart panels (county choropleth of FCC BDC vs BEAD project areas).
 - Any per-source override for `uhbo-challenge` if the FAQ-heavy content
   competes with the answer chunk on other queries.
 - Whether to embed a small MMR/BM25 tuning report in the UI.
@@ -91,6 +103,10 @@ entries (chunker, verification, retry rules, retrieval, cost).
 - Refusal explanations are model text checked only for figures, not for
   claims. A figure-free reason is passed through as-is; a reason with
   digits is replaced by a fixed generic sentence.
+- The BEAD project-areas series counts approved-funded locations by
+  project area (7,009 total) and is not a served/unserved measure of the
+  whole county. It cannot be added or subtracted against the FCC BDC
+  BSL tiers, which use a different location fabric.
 
 ## Out of scope
 

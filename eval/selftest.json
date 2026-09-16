@@ -306,5 +306,15 @@
       "reason": "a correct status item",
       "item": { "key": "k", "label": "Allocation", "value": "$100", "source": { "doc": "x", "page": 1, "quote": "The Hawaiʻi allocation is $100 exactly" } }
     }
+  ],
+  "dataCases": [
+    {
+      "letter": "w",
+      "kind": "must_fail",
+      "reason": "project-areas CSV whose county totals do not sum to the row count",
+      "kind_check": "bead-project-areas",
+      "csv": "county,unserved,underserved,total,fiber,leo\nHawaii,5012,196,5208,4146,1062\nHonolulu,877,20,897,881,16\nKauai,141,4,145,68,77\nMaui,600,157,757,627,130\n",
+      "expected_row_count": 7009
+    }
   ]
 }
