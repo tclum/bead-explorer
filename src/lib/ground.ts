@@ -1,23 +1,25 @@
 import Anthropic from "@anthropic-ai/sdk";
 import { retrieve } from "./retrieve";
-import { verifyCitations, numbersCovered, extractNumbers, sanitizeRefusalReason } from "./verify";
-import type { Citation, GroundedResult, RetrievedChunk, Usage, VerifiedCitation } from "./types";
+import { verifyCitations, numbersCovered, extractNumbers, sanitizeRefusalReason, withholdUncoveredSentences } from "./verify";
+import type { Citation, DroppedCitation, GroundedResult, RetrievedChunk, Usage, VerifiedCitation } from "./types";
 
-const K_DEFAULT = 12;
+const K_DEFAULT = 20;
 const DEFAULT_MODEL = "claude-sonnet-5";
-const MAX_TOKENS = 1024;
+const MAX_TOKENS = 2048;
 
 const SYSTEM_PROMPT = `You answer questions about the State of Hawaiʻi's BEAD (Broadband Equity, Access, and Deployment) program using ONLY the passages provided in the user message. Rules:
-1. Use no outside knowledge. If the passages do not contain the answer, refuse: set refused=true, citations=[], and explain in one sentence what the loaded documents do and do not cover. Refusing is a correct outcome, never a failure.
-2. Every factual claim in the answer must be supported by a citation. A citation's quote must be copied exactly, character for character, from the passage it cites, and must be a contiguous span of 15 to 300 characters. Prefer the shortest span that contains the fact.
+1. Use no outside knowledge. If the passages do not contain the specific fact the question asks for, refuse: set refused=true, answer="", citations=[], and put a one-sentence generic-cover-summary in refusal_reason. Do not put an explanation in the answer field; do not hedge by offering related-but-different facts (e.g., "planned" or "contracted" when the question asks "so far" or "completed"). Refusing is a correct outcome, never a failure.
+2. Every factual claim in the answer must be supported by a citation. A citation's quote must be at most one sentence and at most 150 characters, and must be copied from the passage EXACTLY as it appears — including any typos, odd spacing, or unusual punctuation. Never correct or clean up passage text inside a quote. Several short quotes beat one long quote.
 3. Answer in plain language, two to four sentences, with the key numbers, dates, and names stated explicitly. Do not editorialize.
 4. If passages disagree, say so and cite both.
 5. Never name any company, product, or organization that does not appear in the passages.
 6. Every number, date, dollar amount, and percentage you state must appear inside one of your citation quotes, copied exactly; prefer quoting the line that carries the figure.
 7. When reporting a breakdown, keep the source's categories and labels exactly as listed; never nest, combine, or infer relationships between figures.
 8. Refer to source documents by name only (e.g., "the Final Proposal", "the Challenge Process Guide"). Do NOT include document identifiers or version numbers (like "Volume 1", "Vol. 2", "v1.2", "Section 3", "page 5") in the answer, unless the question specifically asks about them.
+9. Answer the question asked; do not enumerate breakdowns, sub-totals, or lists unless the question asks for them.
+10. Provide at most six citations.
 
-Citation guidance: for each distinct figure you plan to state, supply a citation whose quote is a 15-300 character span from a passage and includes that figure verbatim. It is fine to include multiple citations. If two figures both appear in one span, one citation for that span covers both. Do not paraphrase inside a quote.`;
+Citation guidance: for each distinct figure you plan to state, supply a citation whose quote is at most one sentence and at most 150 characters copied verbatim from a passage and includes that figure. Prefer several short quotes over one long quote. Copy the passage text exactly as displayed — including typos and odd spacing — never correcting it. For lists and bullet points, quote one list item per citation, exactly as printed, including the bullet character if it is part of the line. It is fine to include multiple citations. If two figures both appear in one short span, one citation for that span covers both. Do not paraphrase inside a quote.`;
 
 const TOOL_DEFINITION = {
   name: "grounded_answer",
@@ -153,7 +155,7 @@ export async function askGrounded(
 
   let verification = verifyCitations(citations, retrieved);
   let verified: VerifiedCitation[] = verification.verified;
-  let dropped = verification.dropped;
+  let dropped: DroppedCitation[] = verification.dropped;
   let retried = false;
   let answer_revised = false;
   let uncovered: string[] = [];
@@ -165,7 +167,7 @@ export async function askGrounded(
   if (!refused && firstCall && (initialAllDropped || coverage.uncovered.length > 0)) {
     retried = true;
     const followUp = initialAllDropped
-      ? `None of your citation quotes appears verbatim in the passages you were given. You may remove any figure you cannot cite verbatim; you may not add new figures or new claims. Please provide citations whose 'quote' field is copied EXACTLY, character-for-character, from one of the passages (a contiguous span of 15-300 characters). Return the answer again with verified citations.`
+      ? `None of your citation quotes appears verbatim in the passages you were given. You may remove any figure you cannot cite verbatim; you may not add new figures or new claims. Please provide citations whose 'quote' field is copied EXACTLY, character-for-character, from one of the passages (each quote at most one sentence, at most 150 characters). Return the answer again with verified citations.`
       : (() => {
           const hints = coverage.uncovered.map((n) => {
             const canonicalRe = new RegExp(`(?<![\\d.])${n.replace(/\./g, "\\.")}(?![\\d.])`);
@@ -176,7 +178,7 @@ export async function askGrounded(
               ? `${n} appears in: ${passages.slice(0, 4).join(", ")}`
               : `${n} appears in none of the passages`;
           });
-          return `These figures in your previous answer are not yet in any of your citation quotes: ${coverage.uncovered.join(", ")}.\n\nYou may remove any figure you cannot cite verbatim; you may not add new figures or new claims. For each figure you keep, add a NEW citation entry to your citations array whose 'quote' is a 15-300 character span copied EXACTLY from a passage and which contains that specific figure. Do not remove or edit previous citations that were already verified. Return the (possibly revised) answer and the complete list of citations (previous + new).\n\nHints from the passages you were given:\n${hints.join("\n")}`;
+          return `These figures in your previous answer are not yet in any of your citation quotes: ${coverage.uncovered.join(", ")}.\n\nYou may remove any figure you cannot cite verbatim; you may not add new figures or new claims. For each figure you keep, add a NEW citation entry to your citations array whose 'quote' is at most one sentence and at most 150 characters, copied EXACTLY from a passage, and which contains that specific figure. Do not remove or edit previous citations that were already verified. Return the (possibly revised) answer and the complete list of citations (previous + new).\n\nHints from the passages you were given:\n${hints.join("\n")}`;
         })();
 
     const secondResponse = await client.messages.create({
@@ -219,7 +221,7 @@ export async function askGrounded(
     citations = Array.from(mergedMap.values());
     verification = verifyCitations(citations, retrieved);
     verified = verification.verified;
-    dropped += verification.dropped;
+    dropped = verification.dropped;
 
     // Subset rule: accept the retry's answer iff (a) it is not refused,
     // (b) its numbers are a subset of the first-turn's, and (c) every
@@ -244,20 +246,30 @@ export async function askGrounded(
     refusal_reason = "ungrounded: no citation could be verified against the retrieved passages";
   }
 
+  let withheld_count = 0;
+  let withheld_sentences: string[] = [];
   if (!refused) {
-    const finalCoverage = numbersCovered(answer, verified.map((v) => v.quote));
-    uncovered = finalCoverage.uncovered;
-    if (uncovered.length > 0) {
+    // Withhold instead of refuse: prune sentences whose figures lack a
+    // verified receipt. If nothing survives, refuse.
+    const pruned = withholdUncoveredSentences(answer, verified.map((v) => v.quote));
+    answer = pruned.answer;
+    withheld_count = pruned.withheld_count;
+    withheld_sentences = pruned.withheld_sentences;
+    uncovered = pruned.uncovered_after;
+    if (answer.length === 0) {
       refused = true;
-      refusal_reason = `ungrounded: ${uncovered.length} figure(s) lack a verified citation: ${uncovered.join(", ")}`;
+      refusal_reason = "ungrounded: no verifiable content remains after withholding uncovered figures";
     }
   }
 
   // Refusals are figure-free by construction: no answer text, no citations,
-  // and a refusal_reason that carries no numbers.
+  // and a refusal_reason that carries no numbers. Withheld sentences are
+  // also cleared on refusal so nothing leaks through refusal_reason.
   if (refused) {
     answer = "";
     verified = [];
+    withheld_sentences = [];
+    withheld_count = 0;
     refusal_reason = sanitizeRefusalReason(refusal_reason);
   }
 
@@ -266,13 +278,16 @@ export async function askGrounded(
     answer,
     refused,
     citations: verified,
-    dropped_citations: dropped,
+    dropped,
+    dropped_citations: dropped.length,
     retrieved: retrieved.map((r) => ({ id: r.id, doc: r.doc, page: r.page, score: r.score })),
     model,
     latency_ms: Date.now() - started,
     retried,
     answer_revised,
     uncovered_numbers: uncovered,
+    withheld_count,
+    withheld_sentences,
     usage,
   };
   if (refusal_reason) result.refusal_reason = refusal_reason;

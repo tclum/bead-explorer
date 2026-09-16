@@ -7,6 +7,17 @@ import type { Manifest, Source, Chunk, Corpus } from "../src/lib/types";
 import { chunkPage, MAX_CHUNK_CHARS, type PageInput } from "../src/lib/chunk";
 
 const MIN_CHUNK_CHARS = 40;
+const TERMINAL_PUNCT_RE = /[.:;?!)"%]$/;
+// URL-ending pattern: chunk ends inside a URL. Accepted as a structural
+// boundary — appendix pages of the Initial Proposal are lists of source
+// URLs, and cutting between URLs is a clean structural boundary even
+// though the chunk doesn't end in prose punctuation.
+const URL_END_RE = /https?:\/\/\S*$/;
+const TERMINAL_SHARE_MIN = 0.8;
+const TERMINAL_GATE_SOURCES = new Set(["fp", "fp-appendix", "ipv1", "ipv2", "cpg"]);
+function endsWell(text: string): boolean {
+  return TERMINAL_PUNCT_RE.test(text) || URL_END_RE.test(text);
+}
 const HISTOGRAM_BUCKETS: [number, number][] = [
   [40, 320],
   [320, 600],
@@ -193,7 +204,7 @@ async function ingestSource(source: Source): Promise<{ chunks: Chunk[]; sourceUp
   };
 }
 
-function statsFor(chunks: Chunk[]): { max: number; min: number; mean: number; hist: number[] } {
+function statsFor(chunks: Chunk[]): { max: number; min: number; mean: number; hist: number[]; termShare: number } {
   const lens = chunks.map((c) => c.text.length);
   const max = lens.reduce((a, b) => Math.max(a, b), 0);
   const min = lens.reduce((a, b) => Math.min(a, b), Number.POSITIVE_INFINITY);
@@ -208,7 +219,9 @@ function statsFor(chunks: Chunk[]): { max: number; min: number; mean: number; hi
       }
     }
   }
-  return { max, min, mean, hist };
+  const terminated = chunks.filter((c) => endsWell(c.text)).length;
+  const termShare = chunks.length > 0 ? terminated / chunks.length : 0;
+  return { max, min, mean, hist, termShare };
 }
 
 async function main() {
@@ -226,6 +239,7 @@ async function main() {
     min: number;
     mean: number;
     hist: number[];
+    termShare: number;
     htmlText?: string;
   };
   const rows: Row[] = [];
@@ -250,8 +264,27 @@ async function main() {
       min: st.min,
       mean: st.mean,
       hist: st.hist,
+      termShare: st.termShare,
       htmlText,
     });
+  }
+
+  for (const r of rows) {
+    if (TERMINAL_GATE_SOURCES.has(r.id)) {
+      console.log(`  termShare: ${r.id.padEnd(22)} ${r.termShare.toFixed(3)}`);
+    }
+  }
+  const termGateFailures: string[] = [];
+  for (const r of rows) {
+    if (TERMINAL_GATE_SOURCES.has(r.id) && r.termShare < TERMINAL_SHARE_MIN) {
+      termGateFailures.push(`${r.id} termShare=${r.termShare.toFixed(3)}`);
+    }
+  }
+  if (termGateFailures.length > 0) {
+    for (const f of termGateFailures) console.error(`  gate: ${f}`);
+    die(
+      `FAIL: terminal-punctuation share below ${TERMINAL_SHARE_MIN} for: ${termGateFailures.join(", ")}`,
+    );
   }
 
   const totalChars = allChunks.reduce((s, c) => s + c.text.length, 0);
@@ -277,18 +310,19 @@ async function main() {
 
   console.log("");
   console.log("SUMMARY");
-  console.log("id                     | pages | chunks | characters | max  | mean");
-  console.log("---------------------- | ----- | ------ | ---------- | ---- | ----");
+  console.log("id                     | pages | chunks | characters | max  | mean | termShare");
+  console.log("---------------------- | ----- | ------ | ---------- | ---- | ---- | ---------");
   for (const r of rows) {
     console.log(
-      `${r.id.padEnd(22)} | ${String(r.pagesUsed).padStart(5)} | ${String(r.chunks).padStart(6)} | ${String(r.chars).padStart(10)} | ${String(r.max).padStart(4)} | ${String(r.mean).padStart(4)}`,
+      `${r.id.padEnd(22)} | ${String(r.pagesUsed).padStart(5)} | ${String(r.chunks).padStart(6)} | ${String(r.chars).padStart(10)} | ${String(r.max).padStart(4)} | ${String(r.mean).padStart(4)} | ${r.termShare.toFixed(3)}`,
     );
   }
-  console.log("---------------------- | ----- | ------ | ---------- | ---- | ----");
+  console.log("---------------------- | ----- | ------ | ---------- | ---- | ---- | ---------");
   const allMax = rows.reduce((a, r) => Math.max(a, r.max), 0);
   const allMean = Math.round(allChunks.reduce((s, c) => s + c.text.length, 0) / allChunks.length);
+  const allTerm = allChunks.filter((c) => endsWell(c.text)).length / allChunks.length;
   console.log(
-    `total                  |       | ${String(allChunks.length).padStart(6)} | ${String(totalChars).padStart(10)} | ${String(allMax).padStart(4)} | ${String(allMean).padStart(4)}`,
+    `total                  |       | ${String(allChunks.length).padStart(6)} | ${String(totalChars).padStart(10)} | ${String(allMax).padStart(4)} | ${String(allMean).padStart(4)} | ${allTerm.toFixed(3)}`,
   );
 
   console.log("");

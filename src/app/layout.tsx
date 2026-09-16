@@ -1,6 +1,8 @@
 import type { Metadata } from "next";
 import "./globals.css";
 
+const BUILD_SHA = process.env.VERCEL_GIT_COMMIT_SHA ?? process.env.GIT_SHA ?? "dev";
+
 export const metadata: Metadata = {
   title: "Hawaiʻi BEAD Explorer",
   description:
@@ -14,6 +16,9 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
+      <head>
+        <meta name="build-stamp" content={BUILD_SHA} />
+      </head>
       <body className="bg-zinc-950 text-zinc-100 antialiased">{children}</body>
     </html>
   );

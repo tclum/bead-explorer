@@ -183,6 +183,108 @@
       ],
       "retried": true,
       "answer_revised": true
+    },
+    {
+      "letter": "p",
+      "kind": "must_pass",
+      "reason": "two-sentence quote: first sentence verbatim in retrieved chunk, second imagined — accepted with trimmed=true, quote reduced to first sentence",
+      "fixture": { "id": "p", "question": "When did coverage start?", "expect": { "refuse": false, "cite": [["y", 1]], "answer_contains": [["2024"]] } },
+      "raw": {
+        "answer": "Coverage started in 2024.",
+        "refused": false,
+        "citations": [{ "passage_id": "y:p1:1", "quote": "Coverage started in 2024 and covers 42 counties. Something imagined by the model here." }]
+      },
+      "retrieved": [
+        { "id": "x:p1:1", "doc": "x", "page": 1, "text": "The Hawaiʻi allocation is $100 exactly, per Section 1.", "url": "http://x.example/", "page_url": "http://x.example/#page=1", "score": 3.1 },
+        { "id": "y:p1:1", "doc": "y", "page": 1, "text": "Coverage started in 2024 and covers 42 counties.", "url": "http://y.example/", "page_url": "http://y.example/#page=1", "score": 2.9 }
+      ]
+    },
+    {
+      "letter": "q",
+      "kind": "must_fail",
+      "reason": "no sentence of the quote is in any retrieved chunk — dropped with reason not_found, no citation remains, positive fixture fails",
+      "fixture": { "id": "q", "question": "When did coverage start?", "expect": { "refuse": false, "cite": [["y", 1]], "answer_contains": [["2024"]] } },
+      "raw": {
+        "answer": "Coverage started in 2024.",
+        "refused": false,
+        "citations": [{ "passage_id": "y:p1:1", "quote": "The model is dreaming here. Total imagination and more nonsense present." }]
+      },
+      "retrieved": [
+        { "id": "x:p1:1", "doc": "x", "page": 1, "text": "The Hawaiʻi allocation is $100 exactly, per Section 1.", "url": "http://x.example/", "page_url": "http://x.example/#page=1", "score": 3.1 },
+        { "id": "y:p1:1", "doc": "y", "page": 1, "text": "Coverage started in 2024 and covers 42 counties.", "url": "http://y.example/", "page_url": "http://y.example/#page=1", "score": 2.9 }
+      ]
+    },
+    {
+      "letter": "r",
+      "kind": "must_pass",
+      "reason": "quote present in two retrieved chunks other than labeled — attributed to first in retrieval order with reattributed=true",
+      "fixture": { "id": "r", "question": "How many counties?", "expect": { "refuse": false, "cite": [["y", 1]], "answer_contains": [["42"]] } },
+      "raw": {
+        "answer": "Coverage covers 42 counties.",
+        "refused": false,
+        "citations": [{ "passage_id": "x:p1:1", "quote": "Coverage started in 2024 and covers 42 counties" }]
+      },
+      "retrieved": [
+        { "id": "x:p1:1", "doc": "x", "page": 1, "text": "The Hawaiʻi allocation is $100 exactly, per Section 1.", "url": "http://x.example/", "page_url": "http://x.example/#page=1", "score": 3.1 },
+        { "id": "y:p1:1", "doc": "y", "page": 1, "text": "Coverage started in 2024 and covers 42 counties.", "url": "http://y.example/", "page_url": "http://y.example/#page=1", "score": 2.9 },
+        { "id": "z:p1:1", "doc": "z", "page": 1, "text": "Coverage started in 2024 and covers 42 counties, per the archive.", "url": "http://z.example/", "page_url": "http://z.example/#page=1", "score": 2.5 }
+      ]
+    },
+    {
+      "letter": "s",
+      "kind": "must_pass",
+      "reason": "two-segment quote: first segment verbatim in chunk, second paraphrased — kept with only matching segment, trimmed=true",
+      "fixture": { "id": "s", "question": "What areas does the network cover?", "expect": { "refuse": false, "cite": [["x", 1]], "answer_contains": [["Oʻahu"]] } },
+      "raw": {
+        "answer": "The State's Institutional Network covers Oʻahu, Hawaiʻi, Maui, and Kauaʻi.",
+        "refused": false,
+        "citations": [{ "passage_id": "x:p1:1", "quote": "The State's Institutional Network covers Oʻahu, Hawaiʻi, Maui, and Kauaʻi. Coverage started in 2024 with 42 counties in every district." }]
+      },
+      "retrieved": [
+        { "id": "x:p1:1", "doc": "x", "page": 1, "text": "The State's Institutional Network covers Oʻahu, Hawaiʻi, Maui, and Kauaʻi. Coverage started in 2024 and covers 42 counties statewide.", "url": "http://x.example/", "page_url": "http://x.example/#page=1", "score": 3.1 }
+      ]
+    },
+    {
+      "letter": "t",
+      "kind": "must_fail",
+      "reason": "same segment-trim citation as case s; answer states a figure that appears only in the paraphrased (dropped) segment — numbers coverage fails",
+      "fixture": { "id": "t", "question": "How many counties are covered?", "expect": { "refuse": false, "cite": [["x", 1]], "answer_contains": [["42"]] } },
+      "raw": {
+        "answer": "The network covers 42 counties statewide.",
+        "refused": false,
+        "citations": [{ "passage_id": "x:p1:1", "quote": "The State's Institutional Network covers Oʻahu, Hawaiʻi, Maui, and Kauaʻi. Coverage started in 2024 with 42 counties in every district." }]
+      },
+      "retrieved": [
+        { "id": "x:p1:1", "doc": "x", "page": 1, "text": "The State's Institutional Network covers Oʻahu, Hawaiʻi, Maui, and Kauaʻi. Coverage started in 2024 and covers 42 counties statewide.", "url": "http://x.example/", "page_url": "http://x.example/#page=1", "score": 3.1 }
+      ]
+    },
+    {
+      "letter": "u",
+      "kind": "must_pass",
+      "reason": "two-sentence answer whose second sentence carries an uncovered figure is pruned to the first; the required substring lives in the surviving sentence",
+      "fixture": { "id": "u", "question": "What is the allocation?", "expect": { "refuse": false, "cite": [["x", 1]], "answer_contains": [["$100"]] } },
+      "raw": {
+        "answer": "The allocation is $100. Coverage started in 2024 and covers 42 counties.",
+        "refused": false,
+        "citations": [{ "passage_id": "x:p1:1", "quote": "The Hawaiʻi allocation is $100 exactly" }]
+      },
+      "retrieved": [
+        { "id": "x:p1:1", "doc": "x", "page": 1, "text": "The Hawaiʻi allocation is $100 exactly, per Section 1.", "url": "http://x.example/", "page_url": "http://x.example/#page=1", "score": 3.1 }
+      ]
+    },
+    {
+      "letter": "v",
+      "kind": "must_fail",
+      "reason": "the required substring sits in the pruned sentence, so content fails after withholding",
+      "fixture": { "id": "v", "question": "What is the allocation?", "expect": { "refuse": false, "cite": [["x", 1]], "answer_contains": [["149"]] } },
+      "raw": {
+        "answer": "The allocation is documented in the corpus. Hawaiʻi will see approximately $149.5 million under BEAD.",
+        "refused": false,
+        "citations": [{ "passage_id": "x:p1:1", "quote": "The Hawaiʻi allocation is $100 exactly" }]
+      },
+      "retrieved": [
+        { "id": "x:p1:1", "doc": "x", "page": 1, "text": "The Hawaiʻi allocation is $100 exactly, per Section 1.", "url": "http://x.example/", "page_url": "http://x.example/#page=1", "score": 3.1 }
+      ]
     }
   ],
   "statusCases": [

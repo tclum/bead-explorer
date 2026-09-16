@@ -31,6 +31,22 @@ Page numbers everywhere in this app (chunk `page`, citation `page`,
 `#page=N` anchor the browser accepts. They are not the printed folio
 numbers on the PDF's own body pages.
 
+## Chunking
+
+`src/lib/chunk.ts` is sentence-aware. Each page is first split into
+paragraphs (a blank line separates paragraphs where the source has them; for
+PDFs with only single-newline text, adjacent lines are re-flowed by heuristic
+into paragraphs and end-of-line hyphenation is joined). Each paragraph is
+split on sentence boundaries. Sentences are then greedy-packed into chunks
+of at most 1,200 characters joined with single spaces, and `\n\n` is kept
+only at real paragraph boundaries inside a chunk. Each chunk carries the
+previous chunk's last sentence (if 240 characters or fewer) as overlap.
+`MAX_CHUNK_CHARS` stays 1,440; every chunk lies in `[40, 1440]`. Ingest
+also fails if the share of chunks whose text ends in one of
+`. : ; ? ! ) " %` drops below 0.80 for any of `fp`, `fp-appendix`,
+`ipv1`, `ipv2`, or `cpg` — a smoke test that the reflow found real
+paragraphs.
+
 ## Files
 
 - `sources.json` — corpus manifest.

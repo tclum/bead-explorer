@@ -27,14 +27,32 @@ The model receives k=12 passages, and the Anthropic Messages API is called
 with a forced tool call (`grounded_answer`); the `temperature` parameter is
 NOT sent because `claude-sonnet-5` rejects it as deprecated.
 
-**Quote verification with re-attribution.** Every returned citation is
-verified server-side: its quote (after normalization) must be a substring of
-the retrieved chunk it cites. If the quote is not in the cited chunk but IS
-verbatim in exactly one other retrieved chunk, the citation is kept with the
-corrected `passage_id` and `reattributed: true`. If the quote is not in any
-retrieved chunk, or it appears in more than one, the citation is dropped and
-counted. If a non-refusal answer has zero surviving citations, the server
-converts it to a refusal — the model's word is never trusted.
+**Chunking is sentence-aware.** Each page is split into paragraphs (blank
+lines where the source has them; otherwise a heuristic reflow joins
+single-newline PDF lines into paragraphs and drops end-of-line hyphenation).
+Paragraphs split on sentence boundaries, and sentences are greedy-packed
+into ≤1,200 char chunks with `\n\n` preserved only at real paragraph
+boundaries. Each chunk carries the previous chunk's last sentence (≤240
+chars) as one-sentence overlap. Rationale in
+`docs/findings-provenance.md` (chunker).
+
+**Quote verification with re-attribution and segment-level trim.** Every
+citation is verified server-side: its quote (after normalization) must be
+a substring of the retrieved chunk it cites. If the quote is not in the
+cited chunk but IS verbatim in one or more other retrieved chunks, the
+citation is kept with the corrected `passage_id`, `reattributed: true`,
+and picking the first hit in retrieval order. If the full quote is in no
+retrieved chunk, the server splits it on sentence AND list-item
+boundaries (newlines; `● • ○ ▪`; a segment-leading `-` or `–`) and
+verifies each segment (≥15 normalized characters) against each retrieved
+chunk, keeping the chunk with the most matching segments (ties: retrieval
+order). If at least one segment matches, the citation survives with
+`trimmed: true` and its `quote` replaced by the matched segments in
+original order joined by `" … "`. Dropped citations are returned with a
+reason (`too_short` or `not_found`) so the source of each drop is legible
+without reading the code. If a non-refusal answer has zero surviving
+citations, the server converts it to a refusal — the model's word is
+never trusted.
 
 **Number coverage with one retry.** After verification, every canonical
 number, date, dollar amount, and percentage in the answer must appear as a
@@ -47,9 +65,22 @@ uncovered number. Citations from both turns are merged and re-verified.
 The retry's answer is accepted only if (a) it is not refused, (b) the
 figures it contains are a subset of the first turn's, and (c) every
 remaining figure is covered by a verified quote — otherwise the first-turn
-answer stands. If figures still lack citations after the merge, the
-answer is converted to a refusal. `retried`, `answer_revised`, and
-`uncovered_numbers` are surfaced in `GroundedResult` and in the UI.
+answer stands. `retried`, `answer_revised`, and `uncovered_numbers` are
+surfaced in `GroundedResult` and in the UI.
+
+**Withhold, don't refuse.** After the retry, any answer sentence whose
+canonical numbers still lack a verified receipt is dropped from the answer
+rather than refused whole. Sentence splitting is the chunker's rule
+(`. ; ? !` + whitespace + a leading capital / opening quote / bracket, so
+`No. 23` doesn't split); a sentence is withheld when any of its
+`extractNumbers` matches the uncovered set. Only after every sentence with
+uncovered figures is pruned does the server check the remaining answer: if
+it is empty, the result is refused. The withheld figures themselves must
+not appear in the API response or the UI — the UI shows only a one-line
+notice `N figure(s) withheld: no verified receipt.` under the answer;
+`pnpm ask --debug` is the only surface that prints the withheld sentences.
+`GroundedResult.withheld_count` is public, `withheld_sentences` is
+server-only and stripped before serialization.
 
 **Refusals carry no figures and no citations.** Whenever the final result
 has `refused: true` — whether the model refused directly or the server
@@ -106,7 +137,7 @@ pnpm fetch:fcc     # refresh data/fcc-hi-summary.csv
 pnpm dev           # http://localhost:3000
 pnpm eval          # live eval (needs API key)
 pnpm eval --selftest  # offline assertion self-test
-pnpm ask "<question>" [--retrieved]   # run askGrounded locally and print the GroundedResult
+pnpm ask "<question>" [--retrieved] [--debug]   # run askGrounded locally; --debug shows withheld sentences
 pnpm smoke <base-url>                 # POST two probe questions to a deployed route and verify the contract
 ```
 
@@ -120,6 +151,12 @@ not needed. After a push, verify the deployed route with:
 ```bash
 pnpm smoke https://bead-explorer.vercel.app
 ```
+
+`pnpm smoke` first calls `GET /api/version` on the deployed base URL and
+compares its `sha` to `git rev-parse HEAD` locally; on mismatch it
+prints both, prints `RESULT: fail`, and exits 1 before running the
+probes. Pass `--allow-sha-mismatch` to skip that check (e.g. against
+`pnpm dev`); the run does not count as deploy verification.
 
 ## License
 

@@ -13,7 +13,7 @@
       "sha256": "4b9bde0a8ed989cb9d59bb1c44c66676b75604163c76e758705ccbee951a22f9",
       "bytes": 691326,
       "pages": 34,
-      "fetched_at": "2026-09-15T20:10:34.250Z"
+      "fetched_at": "2026-09-16T02:07:55.338Z"
     },
     {
       "id": "fp-appendix",
@@ -27,7 +27,7 @@
       "sha256": "e95f333ebe4bd466a8fb8d3543d13705716ca4e91ddfe27ab6c4561da6a2a02c",
       "bytes": 523444,
       "pages": 14,
-      "fetched_at": "2026-09-15T20:10:34.923Z"
+      "fetched_at": "2026-09-16T02:07:56.038Z"
     },
     {
       "id": "ntia-fp-overview",
@@ -41,7 +41,7 @@
       "sha256": "863943ab624638312201ea900d7ab510394b91fd95582c05bf205f16d633ed95",
       "bytes": 128636,
       "pages": 1,
-      "fetched_at": "2026-09-15T20:10:35.109Z"
+      "fetched_at": "2026-09-16T02:07:56.231Z"
     },
     {
       "id": "ipv1",
@@ -55,7 +55,7 @@
       "sha256": "a3a6b60b6cd38b4cc1dd5e29f3fed7b4b495b1c3588516952d149b3bcb642677",
       "bytes": 600693,
       "pages": 44,
-      "fetched_at": "2026-09-15T20:10:35.167Z"
+      "fetched_at": "2026-09-16T02:07:56.289Z"
     },
     {
       "id": "ipv2",
@@ -69,7 +69,7 @@
       "sha256": "54a3ea79e6e2a66a78c26a6a1b441a89bf3bf193e662b4af324ab19c19c83686",
       "bytes": 1337639,
       "pages": 119,
-      "fetched_at": "2026-09-15T20:10:35.602Z"
+      "fetched_at": "2026-09-16T02:07:56.748Z"
     },
     {
       "id": "cpg",
@@ -88,7 +88,7 @@
       "sha256": "bf4486998ee2804cc21529ae6432dba3d7c79944b127ba304f3d9e80390c22f2",
       "bytes": 721560,
       "pages": 42,
-      "fetched_at": "2026-09-15T20:10:36.602Z"
+      "fetched_at": "2026-09-16T02:07:57.790Z"
     },
     {
       "id": "uhbo-challenge",
@@ -101,7 +101,7 @@
       "sha256": "9d7a03991d13c0979b448eec009e98986a67287224d4394067a2efe19f3cbfbf",
       "bytes": 102865,
       "pages": 1,
-      "fetched_at": "2026-09-15T20:10:37.037Z"
+      "fetched_at": "2026-09-16T02:07:58.259Z"
     },
     {
       "id": "uhbo-final-proposal",
@@ -114,7 +114,7 @@
       "sha256": "0f9d5e461764c5ad6c5b9af0832c4b4d44ed882f9c39ec0dcb0df5a03d5e90ea",
       "bytes": 61801,
       "pages": 1,
-      "fetched_at": "2026-09-15T20:10:37.110Z"
+      "fetched_at": "2026-09-16T02:07:58.335Z"
     },
     {
       "id": "ntia-pr-2025-11-18",
@@ -133,7 +133,7 @@
       "sha256": "c04189a51a2e237c196d873afb07a1e3bf2c0689357630c9b33a54f265db76a9",
       "bytes": 85389,
       "pages": 1,
-      "fetched_at": "2026-09-15T20:10:37.131Z"
+      "fetched_at": "2026-09-16T02:07:58.357Z"
     },
     {
       "id": "ltgov-pr-2025-12-23",
@@ -146,7 +146,7 @@
       "sha256": "d60dd13562daf918220a56815160ed9e2083587b1263214e427f07512b8dff12",
       "bytes": 69875,
       "pages": 1,
-      "fetched_at": "2026-09-15T20:10:37.166Z"
+      "fetched_at": "2026-09-16T02:07:58.392Z"
     },
     {
       "id": "uh-news-2026-08-04",
@@ -168,7 +168,7 @@
       "sha256": "58bed1b954677b8ee4006ad355a335b18ec8f37695be19e64809504e1e2db66d",
       "bytes": 80454,
       "pages": 1,
-      "fetched_at": "2026-09-15T20:10:37.184Z"
+      "fetched_at": "2026-09-16T02:07:58.412Z"
     }
   ]
 }

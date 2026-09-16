@@ -69,8 +69,8 @@ const STOP_WORDS = new Set([
   "you",
 ]);
 
-const CANDIDATE_POOL_MULTIPLIER = 4;
-const PER_DOC_PENALTY = 0.7;
+const CANDIDATE_POOL_MULTIPLIER = 6;
+const PER_DOC_PENALTY = 0.35;
 
 let cached: { index: MiniSearch<Doc>; byId: Map<string, Doc> } | null = null;
 

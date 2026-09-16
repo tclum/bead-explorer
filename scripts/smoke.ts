@@ -1,9 +1,10 @@
 import { readFileSync } from "node:fs";
+import { execSync } from "node:child_process";
 import path from "node:path";
 import { assertFixture, type Fixture } from "../src/lib/assert";
 import type { GroundedResult } from "../src/lib/types";
 
-const SMOKE_VERSION = "smoke v0.1.0";
+const SMOKE_VERSION = "smoke v0.2.0";
 const ROOT = process.cwd();
 const FIXTURES_PATH = path.join(ROOT, "eval", "fixtures.json");
 const TIMEOUT_MS = 45_000;
@@ -42,13 +43,69 @@ async function postAsk(baseUrl: string, question: string): Promise<PostResult> {
   }
 }
 
+type VersionInfo = { sha: string; built_at: string };
+type VersionResult =
+  | { ok: true; info: VersionInfo }
+  | { ok: false; error: string };
+
+async function fetchVersion(baseUrl: string): Promise<VersionResult> {
+  const url = new URL("/api/version", baseUrl).toString();
+  const ac = new AbortController();
+  const t = setTimeout(() => ac.abort(), TIMEOUT_MS);
+  try {
+    const res = await fetch(url, { signal: ac.signal });
+    if (!res.ok) return { ok: false, error: `HTTP ${res.status}` };
+    const body = (await res.json()) as VersionInfo;
+    return { ok: true, info: body };
+  } catch (e) {
+    return { ok: false, error: e instanceof Error ? e.message : String(e) };
+  } finally {
+    clearTimeout(t);
+  }
+}
+
+function localHeadSha(): string {
+  try {
+    return execSync("git rev-parse HEAD", { cwd: ROOT, encoding: "utf8" }).trim();
+  } catch {
+    return "unknown";
+  }
+}
+
+function short(sha: string): string {
+  return sha.length >= 7 ? sha.slice(0, 7) : sha;
+}
+
 async function main() {
-  const baseUrl = process.argv[2];
+  const args = process.argv.slice(2);
+  const allowMismatch = args.includes("--allow-sha-mismatch");
+  const baseUrl = args.find((a) => !a.startsWith("--"));
+
   bufLog(SMOKE_VERSION);
   if (!baseUrl) {
-    bufLog("usage: pnpm smoke <base-url>");
+    bufLog("usage: pnpm smoke <base-url> [--allow-sha-mismatch]");
     buffer.unshift("RESULT: fail");
     flush(1);
+  }
+
+  const localSha = localHeadSha();
+  const version = await fetchVersion(baseUrl!);
+  const deployedSha = version.ok ? version.info.sha : "unknown";
+  // Replace the smoke version line with the sha-annotated form.
+  buffer[0] = `${SMOKE_VERSION} (deployed ${short(deployedSha)}, local ${short(localSha)})`;
+
+  if (!version.ok) {
+    bufLog(`FAIL /api/version: ${version.error}`);
+    if (!allowMismatch) {
+      buffer.unshift("RESULT: fail");
+      flush(1);
+    }
+  } else if (deployedSha !== localSha) {
+    bufLog(`SHA mismatch: deployed=${deployedSha} local=${localSha}`);
+    if (!allowMismatch) {
+      buffer.unshift("RESULT: fail");
+      flush(1);
+    }
   }
 
   const fixturesRaw = JSON.parse(readFileSync(FIXTURES_PATH, "utf8")) as {
@@ -65,7 +122,7 @@ async function main() {
   let failures = 0;
 
   // Check 1: challenge-count question — must be grounded, must cite "37,593", uncovered_numbers empty.
-  const r1 = await postAsk(baseUrl, f04!.question);
+  const r1 = await postAsk(baseUrl!, f04!.question);
   if (!r1.ok) {
     bufLog(`FAIL ${f04!.id} fetch: ${r1.error}`);
     failures += 1;
@@ -88,7 +145,7 @@ async function main() {
   }
 
   // Check 2: Texas allocation — must be refused, zero citations, no figures anywhere.
-  const r2 = await postAsk(baseUrl, r01!.question);
+  const r2 = await postAsk(baseUrl!, r01!.question);
   if (!r2.ok) {
     bufLog(`FAIL ${r01!.id} fetch: ${r2.error}`);
     failures += 1;

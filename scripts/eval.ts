@@ -1,7 +1,7 @@
 import { readFileSync, existsSync } from "node:fs";
 import path from "node:path";
 import { assertFixture, assertStatusItem, buildCorpusIndex, type Fixture } from "../src/lib/assert";
-import { verifyCitations, numbersCovered } from "../src/lib/verify";
+import { verifyCitations, withholdUncoveredSentences } from "../src/lib/verify";
 import type { Corpus, GroundedResult, RetrievedChunk, StatusFile, Usage, VerifiedCitation, Citation, StatusItem } from "../src/lib/types";
 
 const ROOT = process.cwd();
@@ -92,6 +92,15 @@ function parseOnly(args: string[]): Set<string> | null {
   return new Set(val.split(",").map((s) => s.trim()).filter((s) => s.length > 0));
 }
 
+function parseRepeat(args: string[]): number {
+  const idx = args.indexOf("--repeat");
+  if (idx < 0) return 1;
+  const val = args[idx + 1];
+  const n = Number(val);
+  if (!Number.isFinite(n) || n < 1) return 1;
+  return Math.floor(n);
+}
+
 async function selftest(): Promise<never> {
   type Case = {
     letter: string;
@@ -136,20 +145,42 @@ async function selftest(): Promise<never> {
       answer = "";
       citations = [];
     }
-    if (refused) citations = [];
-    const { uncovered } = refused ? { uncovered: [] as string[] } : numbersCovered(answer, citations.map((c) => c.quote));
+    let withheld_count = 0;
+    let withheld_sentences: string[] = [];
+    let uncovered: string[] = [];
+    if (!refused) {
+      const pruned = withholdUncoveredSentences(answer, citations.map((cc) => cc.quote));
+      answer = pruned.answer;
+      withheld_count = pruned.withheld_count;
+      withheld_sentences = pruned.withheld_sentences;
+      uncovered = pruned.uncovered_after;
+      if (answer.length === 0) {
+        refused = true;
+        refusal_reason = "ungrounded: no verifiable content remains after withholding uncovered figures";
+      }
+    }
+    if (refused) {
+      answer = "";
+      citations = [];
+      withheld_sentences = [];
+      withheld_count = 0;
+      uncovered = [];
+    }
     const result: GroundedResult = {
       question: c.fixture.question,
       answer,
       refused,
       citations,
-      dropped_citations: dropped,
+      dropped,
+      dropped_citations: dropped.length,
       retrieved: c.retrieved.map((r) => ({ id: r.id, doc: r.doc, page: r.page, score: r.score })),
       model: "selftest",
       latency_ms: 0,
       retried: c.retried ?? false,
       answer_revised: c.answer_revised ?? false,
       uncovered_numbers: uncovered,
+      withheld_count,
+      withheld_sentences,
       usage: EMPTY_USAGE,
     };
     if (refusal_reason) result.refusal_reason = refusal_reason;
@@ -185,6 +216,7 @@ async function main() {
   loadEnvLocal();
 
   const only = parseOnly(args);
+  const repeat = only === null ? 1 : parseRepeat(args);
   const model = process.env.ANTHROPIC_MODEL ?? "claude-sonnet-5";
 
   const fixturesRaw = JSON.parse(readFileSync(FIXTURES_PATH, "utf8")) as {
@@ -259,49 +291,69 @@ async function main() {
 
   let totalUsage = EMPTY_USAGE;
   const scoped = fixturesRaw.fixtures.filter((f) => only === null || only.has(f.id));
-  for (const f of scoped) {
-    const startedAt = Date.now();
-    let result: GroundedResult | null = null;
-    let livError: string | null = null;
-    try {
-      result = await askGrounded(f.question, { k: fixturesRaw.k ?? 8 });
-    } catch (e) {
-      livError = e instanceof Error ? e.message : String(e);
-    }
-    const dt = ((Date.now() - startedAt) / 1000).toFixed(1);
-    if (!result) {
-      failures.push(f.id);
-      bufLog(`FAIL ${f.id} live error: ${livError} ${dt}s`);
-      continue;
-    }
-    totalUsage = addUsage(totalUsage, result.usage);
-    const a = assertFixture(f, result);
-    const retrievedIds = result.retrieved.map((r) => r.id).join(",");
-    const citation =
-      result.citations[0] ? `${result.citations[0].doc}:p${result.citations[0].page}` : "-";
-    const numbersStatus = a.checks.numbers === "n/a"
-      ? "n/a"
-      : a.checks.numbers === "ok"
-        ? "ok"
-        : `missing:[${a.uncovered_numbers.join(",")}]`;
-    const figuresPart = f.expect.refuse
-      ? ` figures=${a.figures_found.length === 0 ? "none" : `present:[${a.figures_found.join(",")}]`}`
-      : "";
-    const retriedMark = result.retried ? ` retried=true${result.answer_revised ? " revised=true" : ""}` : "";
-    const usageMark = `in=${result.usage.input_tokens} cached=${result.usage.cache_read_input_tokens} out=${result.usage.output_tokens}`;
-    const line = `${a.ok ? "PASS" : "FAIL"} ${f.id} retrieval=${a.checks.retrieval} refusal=${a.checks.refusal} citation=${a.checks.citation === "n/a" ? "n/a" : citation} content=${a.checks.content} numbers=${numbersStatus}${figuresPart}${retriedMark} ${usageMark} ${dt}s`;
-    bufLog(line);
-    if (!a.ok) {
-      failures.push(f.id);
-      bufLog(`  retrieved: ${retrievedIds}`);
-      bufLog(`  answer[0..200]: ${JSON.stringify(result.answer.slice(0, 200))}`);
-      bufLog(`  reasons: ${a.reasons.join("; ")}`);
+  let livePassCount = 0;
+  let liveTotalCount = 0;
+  for (let iter = 1; iter <= repeat; iter += 1) {
+    if (repeat > 1) bufLog(`--- iteration ${iter}/${repeat} ---`);
+    for (const f of scoped) {
+      const startedAt = Date.now();
+      let result: GroundedResult | null = null;
+      let livError: string | null = null;
+      try {
+        result = await askGrounded(f.question, { k: fixturesRaw.k ?? 8 });
+      } catch (e) {
+        livError = e instanceof Error ? e.message : String(e);
+      }
+      const dt = ((Date.now() - startedAt) / 1000).toFixed(1);
+      liveTotalCount += 1;
+      if (!result) {
+        failures.push(f.id);
+        bufLog(`FAIL ${f.id} live error: ${livError} ${dt}s`);
+        continue;
+      }
+      totalUsage = addUsage(totalUsage, result.usage);
+      const a = assertFixture(f, result);
+      const retrievedIds = result.retrieved.map((r) => r.id).join(",");
+      const citation =
+        result.citations[0] ? `${result.citations[0].doc}:p${result.citations[0].page}` : "-";
+      const numbersStatus = a.checks.numbers === "n/a"
+        ? "n/a"
+        : a.checks.numbers === "ok"
+          ? "ok"
+          : `missing:[${a.uncovered_numbers.join(",")}]`;
+      const figuresPart = f.expect.refuse
+        ? ` figures=${a.figures_found.length === 0 ? "none" : `present:[${a.figures_found.join(",")}]`}`
+        : "";
+      const retriedMark = result.retried ? ` retried=true${result.answer_revised ? " revised=true" : ""}` : "";
+      const withheldCount = result.withheld_count ?? 0;
+      const withheldMark = withheldCount > 0 ? ` withheld=${withheldCount}` : ` withheld=0`;
+      const usageMark = `in=${result.usage.input_tokens} cached=${result.usage.cache_read_input_tokens} out=${result.usage.output_tokens}`;
+      const line = `${a.ok ? "PASS" : "FAIL"} ${f.id} retrieval=${a.checks.retrieval} refusal=${a.checks.refusal} citation=${a.checks.citation === "n/a" ? "n/a" : citation} content=${a.checks.content} numbers=${numbersStatus}${figuresPart}${retriedMark}${withheldMark} ${usageMark} ${dt}s`;
+      bufLog(line);
+      if (a.ok) {
+        livePassCount += 1;
+      } else {
+        failures.push(f.id);
+        bufLog(`  retrieved: ${retrievedIds}`);
+        bufLog(`  answer[0..200]: ${JSON.stringify(result.answer.slice(0, 200))}`);
+        bufLog(`  retried=${result.retried} answer_revised=${result.answer_revised} uncovered_numbers=[${result.uncovered_numbers.join(",")}] withheld_count=${withheldCount}`);
+        if (result.dropped && result.dropped.length > 0) {
+          bufLog(`  dropped citations (${result.dropped.length}):`);
+          for (const d of result.dropped) {
+            bufLog(`    - ${d.reason} passage=${d.passage_id} quote=${JSON.stringify(d.quote.slice(0, 100))}`);
+          }
+        } else {
+          bufLog(`  dropped citations: none`);
+        }
+        bufLog(`  reasons: ${a.reasons.join("; ")}`);
+      }
     }
   }
 
-  bufLog(
-    `totals: fixtures=${scoped.length}${only ? ` (--only)` : ""} status_items=${status.items.length} failures=${failures.length}`,
-  );
+  const totalsLabel = repeat > 1
+    ? `totals: fixtures=${scoped.length} (--only) repeat=${repeat} live_pass=${livePassCount}/${liveTotalCount} status_items=${status.items.length} failures=${failures.length}`
+    : `totals: fixtures=${scoped.length}${only ? ` (--only)` : ""} status_items=${status.items.length} failures=${failures.length}`;
+  bufLog(totalsLabel);
   if (failures.length === 0) buffer.unshift("RESULT: pass");
   else buffer.unshift(`RESULT: fail failures=[${failures.join(",")}]`);
 

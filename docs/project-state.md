@@ -8,104 +8,50 @@ documents with per-value provenance, gated by an eval harness.
 
 ## Shipped
 
-- **2026-09-15** — Milestone A: Next.js 15 scaffold; ingest pipeline for the
-  11-source public corpus (6 PDFs + 5 HTML); FCC BDC Hawaiʻi state+county pull
-  from the Esri republication. 300 → 601 → 581 chunks (chunker rewrite;
-  per-source HTML overrides). All PDF page counts match `expect_pages`; every
-  chunk in `[40, 1440]` chars.
-- **2026-09-15** — HTML extraction fix: dropped `div` from paragraph tag list
-  (parent-div text was double-counted with child paragraphs); added optional
-  per-source `selector` / `strip` fields in `sources.json`; wrote overrides for
-  `ntia-pr-2025-11-18` (Drupal press release: `article.node--type-press-releases`
-  + strip `.field--name-field-office/-program/-funding-programs`) and
-  `uh-news-2026-08-04` (WordPress WPEX: `.single-blog-content` + strip
-  related-posts, share, tags, pagination).
-- **2026-09-15** — Milestone B: `normalize`/`retrieve`/`verify`/`ground`; API
-  route `POST /api/ask` (Node.js runtime, per-IP rate limit); dark UI with
-  StatusPanel, AskPanel, Receipts, CorpusList; assertion library + fixture set
-  (8 positive + 2 refuse); selftest with 11 cases (8 must-fail, 3 must-pass);
-  live eval currently green.
-- **2026-09-15** — Retrieval re-ranker made explicit: BM25 with stop-word
-  removal, top-32 candidate pool (`CANDIDATE_POOL_MULTIPLIER = 4`), per-doc
-  MMR-lite penalty (`PER_DOC_PENALTY = 0.7`), k=12. This is what admits the
-  answer-bearing chunks that raw BM25 ranks 9–10 for the two hard fixtures.
-- **2026-09-15** — Prompt caching + usage telemetry + `--only`. System prompt
-  and the passages block carry `cache_control: ephemeral` so the first and
-  retry turns share a cache prefix and eval reruns of the same question hit the
-  cache. `askGrounded` returns a `usage` object (input/output plus cache
-  create/read). `pnpm eval` prints per-fixture `in=/cached=/out=` and a
-  line-three cost summary using a single-source price table
-  (`claude-sonnet-5` at $2/$10 per MTok, cache write $2.50, cache read $0.20).
-  `pnpm eval --only <id>[,<id>...]` runs offline checks plus just those
-  fixtures.
-- **2026-09-15** — Claim-level number coverage added. `verifyCitations`
-  re-attributes a citation whose quote is verbatim in exactly one other
-  retrieved chunk; `extractNumbers` + `numbersCovered` enforce that every
-  canonical number in the answer appears as a whole token in the
-  comma-stripped concatenation of the verified quotes; `askGrounded` runs one
-  follow-up turn if figures are uncovered, hinting which passages contain the
-  missing figures, and refuses if any figure remains uncovered after the retry.
-  System prompt gained rules 6/7/8 and a citation-guidance paragraph.
-  `GroundedResult` gained `retried` and `uncovered_numbers`. `assertFixture`
-  gained a `numbers` check that runs the production coverage function.
-  Selftest gained cases `l` (must-fail: figure missing from every verified
-  quote) and `m` (must-pass: quote verbatim in a retrieved chunk other than
-  labeled → kept with `reattributed=true`).
-- **2026-09-16** Slice 1 deployed to https://bead-explorer.vercel.app (commit
-  `1b5ebfe`); deployed-route smoke: grounded answer and refusal both
-  verified.
-- **2026-09-16** — Refusal path hardened. Retry may now revise the answer
-  under the subset rule: the retry's answer is accepted iff (a) it is not
-  refused, (b) `extractNumbers(retryAnswer)` is a subset of
-  `extractNumbers(firstAnswer)` (drops allowed, additions not), and (c)
-  every remaining figure is covered by a verified quote after merging
-  citations. The follow-up message tells the model plainly: "You may
-  remove any figure you cannot cite verbatim; you may not add new figures
-  or new claims." Refusals are figure-free by construction: `answer=""`,
-  `citations=[]`, and any figure-bearing `refusal_reason` is rewritten to
-  a fixed generic sentence. `GroundedResult` gained `answer_revised`.
-  `assertFixture` for refusal fixtures gained a `figures` check that runs
-  `extractNumbers` over `answer + " " + refusal_reason`. Selftest gained
-  cases `n` (must-fail: refusal with a figure in the reason) and `o`
-  (must-pass: retry revised the answer to drop one figure, every remaining
-  figure covered). `pnpm ask "<q>"` runs `askGrounded` locally and prints
-  the `GroundedResult` (JSON, minus `retrieved` unless `--retrieved`).
-  `pnpm smoke <base-url>` POSTs the challenge-count and Texas-allocation
-  probes to the deployed route and enforces the same contract.
+- **2026-09-15** — `fcc32cd`: Milestone A scaffold + ingest pipeline (11
+  sources, 581 chunks).
+- **2026-09-15** — `119bfea`: HTML extraction fix; per-source
+  `selector`/`strip` overrides.
+- **2026-09-15** — `1b5ebfe`: Milestone B — retrieval + verification +
+  claim-level number coverage + prompt caching + `--only`.
+- **2026-09-16** — `caf98c8`: Slice 1.1 refusal path hardened (subset-rule
+  retry, figure-free refusals); `pnpm ask` + `pnpm smoke` scripts. Deployed
+  to https://bead-explorer.vercel.app.
+- **2026-09-16** — Slice 1.2 (this commit): sentence-aware chunking,
+  segment-level citation verification with multi-match re-attribution
+  and drop reasons, broad-question fixture f09, `/api/version` +
+  SHA-checked smoke. Retrieval retuned: `k=20`, `PER_DOC_PENALTY=0.35`,
+  pool ×6, and `MAX_TOKENS=2048`. System prompt gained rules 9/10
+  ("answer the question asked; do not enumerate breakdowns"; "at most
+  six citations"). See `docs/findings-provenance.md` for the bullet-list
+  verification lesson (f03 flake root cause and fix).
+- **2026-09-16 decision** — **Withhold, don't refuse.** Sentences whose
+  figures remain uncovered after the retry are pruned from the answer
+  (chunker-style sentence split, canonical whole-token match) instead of
+  flipping the whole answer to a refusal. Refusal only fires when the
+  pruned answer is empty. Withheld figures do not appear in the API
+  response or UI; `withheld_count` is public, `withheld_sentences` is
+  server-only (`--debug` on `pnpm ask` opts in). UI: one-liner under the
+  answer. Eval: per-fixture `withheld=N`. Selftest cases `u`/`v` lock
+  the contract.
 
-## Pipeline deviations from the original Slice 1 prompt, with reasons
-
-1. **`temperature` removed from Anthropic call.** `claude-sonnet-5` returns
-   `400 invalid_request_error: temperature is deprecated for this model.` The
-   forced tool schema, k=12, and small answer surface keep behavior stable
-   without it.
-2. **k=12 (not 8) for the model context.** BM25 ranks the "37,593" answer
-   chunk (`uhbo-challenge:p1:1`) at rank ~9 for the f04 query, and the
-   `$30`-bearing `ipv2:p98:2` at rank ~10 for f05. Bumping k to 12 admits both
-   without changing retrieval scoring. Applied in `askGrounded`'s default and
-   `eval/fixtures.json`'s `"k"`.
-3. **Retrieval adds stop-word removal and per-doc MMR-lite.** `processTerm`
-   drops function words (`how`, `many`, `is`, `the`, etc.) so answer-bearing
-   chunks are not down-ranked by common-word noise. Selection is greedy with
-   `effective = score / (1 + 0.7 * count_from_same_doc)` over a top-32
-   candidate pool, giving room for the correct doc when one doc dominates raw
-   scores.
+See `docs/findings-provenance.md` for the durable lessons behind these
+entries (chunker, verification, retry rules, retrieval, cost).
 
 ## Do
 
 - **Between gates, tune with `pnpm eval --only <id>[,<id>...]`.** The full
-  fixture suite runs only at a gate. Rationale: iterating on one fixture with
-  the full 10-fixture run burned a large fraction of a day's API spend today.
-  A cold session should reach for `--only` first when investigating a single
-  fixture; the full suite is the greenlight check, not the tuning loop.
-- **Do not loop the full eval between gates; use `pnpm eval --only <id>`.**
-  A gate is three consecutive full runs, about $0.30 with caching.
+  10+-fixture suite runs only at a gate. A gate is three consecutive full
+  runs, about $0.30 with caching. Rationale in
+  `docs/findings-provenance.md` (cost lesson).
 
 ## Deploy
 
 - **Vercel project `bead-explorer`, team `tclum-4994s-projects`,
   git-connected**: push to `main` deploys production, other branches
-  preview. Verification after deploy: `pnpm smoke https://bead-explorer.vercel.app`.
+  preview. Verification: `pnpm smoke https://bead-explorer.vercel.app`
+  first checks that the deployed SHA matches local HEAD before running
+  probes.
 
 ## Do not touch
 
@@ -114,9 +60,11 @@ documents with per-value provenance, gated by an eval harness.
 ## Open questions
 
 - **2026-09-16 research**: would numbered passage labels (`[1]..[12]`)
-  reduce mislabeled citations? Two of three citations on the deployed
-  challenge question were re-attributed. Measure re-attributed counts over
-  three eval runs with each labeling before changing anything.
+  reduce mis-labeled citations? Two of three citations on the deployed
+  challenge question were re-attributed. Measure re-attributed counts
+  over three eval runs with each labeling before changing anything.
+- **2026-09-16 research**: retrieval quality for short or broad queries;
+  f09 is the probe.
 - **2026-09-16 task**: upgrade Node on MacBook-Pro-437 from 20.11.1 to 22
   LTS between slices; Vercel CLI dependencies warn on 20.11.
 
@@ -143,8 +91,6 @@ documents with per-value provenance, gated by an eval harness.
 - Refusal explanations are model text checked only for figures, not for
   claims. A figure-free reason is passed through as-is; a reason with
   digits is replaced by a fixed generic sentence.
-- Number coverage is numeric only; names and dates in prose are not
-  claim-checked.
 
 ## Out of scope
 

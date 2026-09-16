@@ -1,6 +1,6 @@
 {
   "fixturesVersion": 1,
-  "k": 12,
+  "k": 20,
   "fixtures": [
     { "id": "f01", "question": "How much BEAD funding was Hawaiʻi allocated?", "expect": { "refuse": false, "cite": [["ipv2", 105], ["ntia-fp-overview", 1], ["fp", 4], ["ipv1", 3]], "answer_contains": [["149,484,493", "149,484,494", "149.5 million", "$149.5"]] } },
     { "id": "f02", "question": "When did NTIA approve Hawaiʻi's BEAD Final Proposal?", "expect": { "refuse": false, "cite": [["uhbo-final-proposal", 1], ["ntia-pr-2025-11-18", 1], ["fp", 2], ["fp-appendix", 2]], "answer_contains": [["November 18, 2025", "Nov. 18, 2025", "11/18/2025", "2025-11-18"]] } },
@@ -10,6 +10,7 @@
     { "id": "f06", "question": "Which companies received Hawaiʻi's BEAD deployment awards, and how long is each one's period of performance?", "expect": { "refuse": false, "cite": [["ltgov-pr-2025-12-23", 1], ["fp", 11]], "answer_contains": [["Hawaiian Telcom", "Hawaiian Telecom"], ["Amazon"], ["10 years", "ten (10) years", "ten years", "10-year"]] } },
     { "id": "f07", "question": "How many locations does Hawaiʻi's approved Final Proposal fund, and what share is fiber versus satellite?", "expect": { "refuse": false, "cite": [["ntia-fp-overview", 1], ["uh-news-2026-08-04", 1]], "answer_contains": [["7,033", "7,000"], ["81.7", "82%", "82 percent"]] } },
     { "id": "f08", "question": "What was the first BEAD construction contract Hawaiʻi finalized, and how many homes does it cover?", "expect": { "refuse": false, "cite": [["uh-news-2026-08-04", 1]], "answer_contains": [["Hawaiian Telcom"], ["$34"], ["5,800"]] } },
+    { "id": "f09", "question": "Tell me about Hawaiʻi's BEAD program.", "expect": { "refuse": false, "cite": [["fp", 4], ["ipv1", 3], ["ipv2", 3], ["ipv2", 105], ["ntia-fp-overview", 1], ["ltgov-pr-2025-12-23", 1], ["uh-news-2026-08-04", 1]], "answer_contains": [["149"]] } },
     { "id": "r01", "question": "What is Texas's BEAD allocation?", "expect": { "refuse": true } },
     { "id": "r02", "question": "How many locations has Hawaiian Telcom connected with BEAD funds so far?", "expect": { "refuse": true } }
   ]

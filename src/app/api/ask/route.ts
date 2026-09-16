@@ -4,6 +4,14 @@ import { askGrounded } from "@/lib/ground";
 export const runtime = "nodejs";
 export const maxDuration = 30;
 
+// Dropped citations reveal quotes the model produced but couldn't verify —
+// those quotes may contain hallucinated figures. Digits are masked to `#`
+// in the 80-character preview so unverified numbers never leak through
+// the API or the UI.
+function maskDroppedQuote(quote: string): string {
+  return quote.slice(0, 80).replace(/\d/g, "#");
+}
+
 const WINDOW_MS = 60_000;
 const MAX_REQUESTS = 10;
 const buckets = new Map<string, { count: number; windowStart: number }>();
@@ -55,7 +63,16 @@ export async function POST(req: NextRequest) {
   }
   try {
     const result = await askGrounded(question);
-    return NextResponse.json(result);
+    // The withheld figures themselves must not appear in the API response;
+    // clients receive only the count. `withheld_sentences` stays server-only.
+    const { withheld_sentences: _withheld, ...safe } = result;
+    void _withheld;
+    const droppedSafe = safe.dropped.map((d) => ({
+      passage_id: d.passage_id,
+      reason: d.reason,
+      quote: maskDroppedQuote(d.quote),
+    }));
+    return NextResponse.json({ ...safe, dropped: droppedSafe });
   } catch {
     return NextResponse.json({ error: "upstream model error" }, { status: 502 });
   }

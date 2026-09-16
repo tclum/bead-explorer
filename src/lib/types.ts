@@ -46,6 +46,12 @@ export type VerifiedCitation = Citation & {
   url: string;
   page_url: string;
   reattributed: boolean;
+  trimmed: boolean;
+};
+export type DroppedCitation = {
+  passage_id: string;
+  quote: string;
+  reason: "too_short" | "not_found";
 };
 
 export type RetrievedChunk = {
@@ -71,6 +77,7 @@ export type GroundedResult = {
   refused: boolean;
   refusal_reason?: string;
   citations: VerifiedCitation[];
+  dropped: DroppedCitation[];
   dropped_citations: number;
   retrieved: { id: string; doc: string; page: number; score: number }[];
   model: string;
@@ -78,6 +85,10 @@ export type GroundedResult = {
   retried: boolean;
   answer_revised: boolean;
   uncovered_numbers: string[];
+  withheld_count: number;
+  // Server-only; stripped by the API route and by `pnpm ask` unless --debug.
+  // The withheld figures themselves must not appear in the API response or UI.
+  withheld_sentences: string[];
   usage: Usage;
 };
 

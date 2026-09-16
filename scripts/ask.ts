@@ -21,9 +21,13 @@ async function main() {
   loadEnvLocal();
   const args = process.argv.slice(2);
   const includeRetrieved = args.includes("--retrieved");
-  const question = args.filter((a) => a !== "--retrieved").join(" ").trim();
+  const debug = args.includes("--debug");
+  const question = args
+    .filter((a) => a !== "--retrieved" && a !== "--debug")
+    .join(" ")
+    .trim();
   if (!question) {
-    process.stderr.write('usage: pnpm ask "<question>" [--retrieved]\n');
+    process.stderr.write('usage: pnpm ask "<question>" [--retrieved] [--debug]\n');
     process.exit(2);
   }
   if (!process.env.ANTHROPIC_API_KEY) {
@@ -34,6 +38,17 @@ async function main() {
   const result = await askGrounded(question);
   const out: Record<string, unknown> = { ...result };
   if (!includeRetrieved) delete out.retrieved;
+  // Unverified figures are masked by default: withheld sentences are
+  // hidden entirely, and dropped-quote previews replace digits with `#`
+  // (an 80-character preview). `--debug` opts in to the full quotes.
+  if (!debug) {
+    delete out.withheld_sentences;
+    out.dropped = result.dropped.map((d) => ({
+      passage_id: d.passage_id,
+      reason: d.reason,
+      quote: d.quote.slice(0, 80).replace(/\d/g, "#"),
+    }));
+  }
   process.stdout.write(JSON.stringify(out, null, 2) + "\n");
 }
 

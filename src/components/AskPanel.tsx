@@ -5,7 +5,7 @@ import type { GroundedResult } from "@/lib/types";
 import Receipts from "./Receipts";
 
 const CHIPS: { id: string; label: string; question: string }[] = [
-  { id: "f01", label: "How much did Hawaiʻi get?", question: "How much BEAD funding was Hawaiʻi allocated?" },
+  { id: "f09", label: "About the program", question: "Tell me about Hawaiʻi's BEAD program." },
   { id: "f03", label: "Challenge process dates", question: "What were the dates of the challenge, rebuttal, and final determination phases of Hawaiʻi's BEAD challenge process?" },
   { id: "f06", label: "Who got the awards?", question: "Which companies received Hawaiʻi's BEAD deployment awards, and how long is each one's period of performance?" },
   { id: "r02", label: "Locations connected so far", question: "How many locations has Hawaiian Telcom connected with BEAD funds so far?" },
@@ -106,11 +106,7 @@ function AnswerCard({ result }: { result: GroundedResult }) {
         <div className="mt-1 text-xs text-amber-300/80">
           Try a more specific question, or one of the examples above.
         </div>
-        {result.dropped_citations > 0 ? (
-          <div className="mt-2 text-xs text-amber-300/80">
-            {result.dropped_citations} citation(s) failed verification and were dropped.
-          </div>
-        ) : null}
+        <DroppedList result={result} />
         <RetrievedList result={result} />
       </div>
     );
@@ -118,19 +114,43 @@ function AnswerCard({ result }: { result: GroundedResult }) {
   return (
     <div className="mt-4 rounded border border-zinc-700/70 bg-zinc-950 p-3">
       <p className="whitespace-pre-wrap text-sm leading-relaxed text-zinc-100">{result.answer}</p>
+      {(result.withheld_count ?? 0) > 0 ? (
+        <div className="mt-2 text-xs text-amber-400/80">
+          {result.withheld_count} figure(s) withheld: no verified receipt.
+        </div>
+      ) : null}
       <Receipts citations={result.citations} />
       {result.retried ? (
         <div className="mt-2 text-xs text-amber-400/80">
           Answer required one retry: initial figures lacked a verified citation.
         </div>
       ) : null}
-      {result.dropped_citations > 0 ? (
-        <div className="mt-2 text-xs text-zinc-500">
-          {result.dropped_citations} citation(s) failed verification and were dropped.
-        </div>
-      ) : null}
+      <DroppedList result={result} />
       <RetrievedList result={result} />
     </div>
+  );
+}
+
+function DroppedList({ result }: { result: GroundedResult }) {
+  const dropped = result.dropped ?? [];
+  if (dropped.length === 0) return null;
+  // Digits are masked to `#` — the dropped quote is unverified model text,
+  // so any figures inside it may be hallucinated. The API already applies
+  // the same mask; this is defense-in-depth.
+  const mask = (s: string) => s.slice(0, 80).replace(/\d/g, "#");
+  return (
+    <details className="mt-3 text-xs text-zinc-400">
+      <summary className="cursor-pointer select-none hover:text-zinc-200">
+        Dropped citations ({dropped.length})
+      </summary>
+      <ul className="mono mt-1 space-y-1 rounded border border-zinc-800 bg-zinc-900 p-2">
+        {dropped.map((d, i) => (
+          <li key={`${d.passage_id}-${i}`}>
+            {d.reason} — {JSON.stringify(mask(d.quote))}
+          </li>
+        ))}
+      </ul>
+    </details>
   );
 }
 
