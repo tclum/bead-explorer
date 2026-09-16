@@ -105,6 +105,8 @@ async function selftest(): Promise<never> {
       citations: Citation[];
     };
     retrieved: RetrievedChunk[];
+    retried?: boolean;
+    answer_revised?: boolean;
   };
   type StatusCase = {
     letter: string;
@@ -145,7 +147,8 @@ async function selftest(): Promise<never> {
       retrieved: c.retrieved.map((r) => ({ id: r.id, doc: r.doc, page: r.page, score: r.score })),
       model: "selftest",
       latency_ms: 0,
-      retried: false,
+      retried: c.retried ?? false,
+      answer_revised: c.answer_revised ?? false,
       uncovered_numbers: uncovered,
       usage: EMPTY_USAGE,
     };
@@ -192,7 +195,7 @@ async function main() {
 
   if (!process.env.ANTHROPIC_API_KEY) {
     bufLog(`${EVAL_VERSION} (fixtures v${fixturesRaw.fixturesVersion}, model ${model})`);
-    bufLog(`cost: 0 in, 0 cached, 0 out ≈ $0.00 (${model} at $-/$- per MTok, cache write $-, cache read $-)`);
+    bufLog(`cost: 0 in, 0 written, 0 cached, 0 out ≈ $0.00 (${model} at $-/$- per MTok, cache write $-, cache read $-)`);
     bufLog("ANTHROPIC_API_KEY missing");
     buffer.unshift("RESULT: fail");
     flush(1);
@@ -200,7 +203,7 @@ async function main() {
 
   if (!existsSync(CORPUS_PATH)) {
     bufLog(`${EVAL_VERSION} (fixtures v${fixturesRaw.fixturesVersion}, model ${model})`);
-    bufLog(`cost: 0 in, 0 cached, 0 out ≈ $0.00`);
+    bufLog(`cost: 0 in, 0 written, 0 cached, 0 out ≈ $0.00`);
     bufLog("data/corpus.json missing; run `pnpm ingest` first");
     buffer.unshift("RESULT: fail");
     flush(1);
@@ -209,7 +212,7 @@ async function main() {
   const corpus = JSON.parse(readFileSync(CORPUS_PATH, "utf8")) as Corpus;
   if (corpus.chunks.length === 0) {
     bufLog(`${EVAL_VERSION} (fixtures v${fixturesRaw.fixturesVersion}, model ${model})`);
-    bufLog(`cost: 0 in, 0 cached, 0 out ≈ $0.00`);
+    bufLog(`cost: 0 in, 0 written, 0 cached, 0 out ≈ $0.00`);
     bufLog("data/corpus.json contains 0 chunks");
     buffer.unshift("RESULT: fail");
     flush(1);
@@ -281,9 +284,12 @@ async function main() {
       : a.checks.numbers === "ok"
         ? "ok"
         : `missing:[${a.uncovered_numbers.join(",")}]`;
-    const retriedMark = result.retried ? " retried=true" : "";
+    const figuresPart = f.expect.refuse
+      ? ` figures=${a.figures_found.length === 0 ? "none" : `present:[${a.figures_found.join(",")}]`}`
+      : "";
+    const retriedMark = result.retried ? ` retried=true${result.answer_revised ? " revised=true" : ""}` : "";
     const usageMark = `in=${result.usage.input_tokens} cached=${result.usage.cache_read_input_tokens} out=${result.usage.output_tokens}`;
-    const line = `${a.ok ? "PASS" : "FAIL"} ${f.id} retrieval=${a.checks.retrieval} refusal=${a.checks.refusal} citation=${a.checks.citation === "n/a" ? "n/a" : citation} content=${a.checks.content} numbers=${numbersStatus}${retriedMark} ${usageMark} ${dt}s`;
+    const line = `${a.ok ? "PASS" : "FAIL"} ${f.id} retrieval=${a.checks.retrieval} refusal=${a.checks.refusal} citation=${a.checks.citation === "n/a" ? "n/a" : citation} content=${a.checks.content} numbers=${numbersStatus}${figuresPart}${retriedMark} ${usageMark} ${dt}s`;
     bufLog(line);
     if (!a.ok) {
       failures.push(f.id);
@@ -304,7 +310,7 @@ async function main() {
   const priceStr = priceTable
     ? `${model} at $${priceTable.input}/$${priceTable.output} per MTok, cache write $${priceTable.cache_write}, cache read $${priceTable.cache_read}`
     : `${model} (no price table)`;
-  buffer[costLineIndex + 1] = `cost: ${totalUsage.input_tokens} in, ${totalUsage.cache_read_input_tokens} cached, ${totalUsage.output_tokens} out ≈ $${cost.toFixed(2)} (${priceStr})`;
+  buffer[costLineIndex + 1] = `cost: ${totalUsage.input_tokens} in, ${totalUsage.cache_creation_input_tokens} written, ${totalUsage.cache_read_input_tokens} cached, ${totalUsage.output_tokens} out ≈ $${cost.toFixed(2)} (${priceStr})`;
 
   flush(failures.length === 0 ? 0 : 1);
 }

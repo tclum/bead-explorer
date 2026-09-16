@@ -71,3 +71,12 @@ export function numbersCovered(answer: string, quotes: string[]): { uncovered: s
   }
   return { uncovered };
 }
+
+export const GENERIC_REFUSAL =
+  "The loaded documents don't contain an answer to this question. They cover Hawaiʻi's BEAD Initial and Final Proposals, the challenge process, NTIA's approval, and the state's deployment announcement.";
+
+export function sanitizeRefusalReason(reason: string | undefined): string {
+  if (!reason) return GENERIC_REFUSAL;
+  if (extractNumbers(reason).length > 0) return GENERIC_REFUSAL;
+  return reason;
+}

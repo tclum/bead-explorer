@@ -1,5 +1,5 @@
 import { normalize } from "./normalize";
-import { numbersCovered } from "./verify";
+import { extractNumbers, numbersCovered } from "./verify";
 import type { Chunk, GroundedResult, StatusItem } from "./types";
 
 export type FixtureExpect =
@@ -22,9 +22,11 @@ export type FixtureAssertion = {
     citation: FixtureCheckStatus;
     content: FixtureCheckStatus;
     numbers: FixtureCheckStatus;
+    figures: FixtureCheckStatus;
   };
   reasons: string[];
   uncovered_numbers: string[];
+  figures_found: string[];
 };
 
 export type CorpusIndex = {
@@ -60,6 +62,7 @@ export function assertFixture(
     citation: "n/a",
     content: "n/a",
     numbers: "n/a",
+    figures: "n/a",
   };
 
   if (fixture.expect.refuse) {
@@ -69,7 +72,13 @@ export function assertFixture(
       checks.refusal = "fail";
       reasons.push(`refusal fixture must have zero citations, got ${result.citations.length}`);
     }
-    return { ok: checks.refusal === "ok", checks, reasons, uncovered_numbers: [] };
+    const figures_found = extractNumbers(`${result.answer} ${result.refusal_reason ?? ""}`);
+    checks.figures = figures_found.length === 0 ? "ok" : "fail";
+    if (figures_found.length > 0) {
+      reasons.push(`refusal must carry no figures, found: ${figures_found.join(", ")}`);
+    }
+    const ok = Object.values(checks).every((v) => v === "ok" || v === "n/a");
+    return { ok, checks, reasons, uncovered_numbers: [], figures_found };
   }
 
   const cite = fixture.expect.cite;
@@ -98,7 +107,7 @@ export function assertFixture(
   if (uncovered.length > 0) reasons.push(`uncovered figures in answer: ${uncovered.join(", ")}`);
 
   const ok = Object.values(checks).every((v) => v === "ok" || v === "n/a");
-  return { ok, checks, reasons, uncovered_numbers: uncovered };
+  return { ok, checks, reasons, uncovered_numbers: uncovered, figures_found: [] };
 }
 
 export function assertStatusItem(

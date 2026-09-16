@@ -103,6 +103,9 @@ function AnswerCard({ result }: { result: GroundedResult }) {
       <div className="mt-4 rounded border border-amber-700/60 bg-amber-950/40 p-3 text-sm text-amber-200">
         <div className="font-semibold">Refused</div>
         <div className="mt-1">{result.refusal_reason ?? "The corpus does not answer this question."}</div>
+        <div className="mt-1 text-xs text-amber-300/80">
+          Try a more specific question, or one of the examples above.
+        </div>
         {result.dropped_citations > 0 ? (
           <div className="mt-2 text-xs text-amber-300/80">
             {result.dropped_citations} citation(s) failed verification and were dropped.

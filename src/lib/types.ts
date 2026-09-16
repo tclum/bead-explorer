@@ -76,6 +76,7 @@ export type GroundedResult = {
   model: string;
   latency_ms: number;
   retried: boolean;
+  answer_revised: boolean;
   uncovered_numbers: string[];
   usage: Usage;
 };

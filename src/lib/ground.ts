@@ -1,6 +1,6 @@
 import Anthropic from "@anthropic-ai/sdk";
 import { retrieve } from "./retrieve";
-import { verifyCitations, numbersCovered } from "./verify";
+import { verifyCitations, numbersCovered, extractNumbers, sanitizeRefusalReason } from "./verify";
 import type { Citation, GroundedResult, RetrievedChunk, Usage, VerifiedCitation } from "./types";
 
 const K_DEFAULT = 12;
@@ -115,6 +115,12 @@ function normalizeParsed(parsed: ToolInput | null): {
   };
 }
 
+function isNumberSubset(subset: string[], superset: string[]): boolean {
+  const s = new Set(superset);
+  for (const n of subset) if (!s.has(n)) return false;
+  return true;
+}
+
 export async function askGrounded(
   question: string,
   opts?: { k?: number; client?: Anthropic; model?: string },
@@ -149,6 +155,7 @@ export async function askGrounded(
   let verified: VerifiedCitation[] = verification.verified;
   let dropped = verification.dropped;
   let retried = false;
+  let answer_revised = false;
   let uncovered: string[] = [];
 
   const initialAllDropped =
@@ -158,7 +165,7 @@ export async function askGrounded(
   if (!refused && firstCall && (initialAllDropped || coverage.uncovered.length > 0)) {
     retried = true;
     const followUp = initialAllDropped
-      ? `None of your citation quotes appears verbatim in the passages you were given. Please provide citations whose 'quote' field is copied EXACTLY, character-for-character, from one of the passages (a contiguous span of 15-300 characters). Return the full answer again with verified citations.`
+      ? `None of your citation quotes appears verbatim in the passages you were given. You may remove any figure you cannot cite verbatim; you may not add new figures or new claims. Please provide citations whose 'quote' field is copied EXACTLY, character-for-character, from one of the passages (a contiguous span of 15-300 characters). Return the answer again with verified citations.`
       : (() => {
           const hints = coverage.uncovered.map((n) => {
             const canonicalRe = new RegExp(`(?<![\\d.])${n.replace(/\./g, "\\.")}(?![\\d.])`);
@@ -169,7 +176,7 @@ export async function askGrounded(
               ? `${n} appears in: ${passages.slice(0, 4).join(", ")}`
               : `${n} appears in none of the passages`;
           });
-          return `These figures in your previous answer are not yet in any of your citation quotes: ${coverage.uncovered.join(", ")}.\n\nFor each figure you should either (a) add a NEW citation entry to your citations array, whose 'quote' field is a 15-300 character span copied EXACTLY from a passage and which contains that specific figure, or (b) remove only that specific figure from the answer. Do not change other content in the answer. Do not remove or edit previous citations that were already verified. Return the updated answer and the complete list of citations (previous + new).\n\nHints from the passages you were given:\n${hints.join("\n")}`;
+          return `These figures in your previous answer are not yet in any of your citation quotes: ${coverage.uncovered.join(", ")}.\n\nYou may remove any figure you cannot cite verbatim; you may not add new figures or new claims. For each figure you keep, add a NEW citation entry to your citations array whose 'quote' is a 15-300 character span copied EXACTLY from a passage and which contains that specific figure. Do not remove or edit previous citations that were already verified. Return the (possibly revised) answer and the complete list of citations (previous + new).\n\nHints from the passages you were given:\n${hints.join("\n")}`;
         })();
 
     const secondResponse = await client.messages.create({
@@ -204,9 +211,8 @@ export async function askGrounded(
 
     const secondCall = extractToolCall(secondResponse);
     const secondParsed = normalizeParsed(secondCall?.input ?? null);
-    // Keep first-turn answer for stability; merge citations from both turns
-    // regardless of the retry's refused flag — the retry may return refused=true
-    // yet still provide useful citations, and the first-turn answer stands.
+
+    // Merge citations from both turns and re-verify.
     const mergedMap = new Map<string, Citation>();
     for (const c of firstParsed.citations) mergedMap.set(`${c.passage_id}||${c.quote}`, c);
     for (const c of secondParsed.citations) mergedMap.set(`${c.passage_id}||${c.quote}`, c);
@@ -214,13 +220,28 @@ export async function askGrounded(
     verification = verifyCitations(citations, retrieved);
     verified = verification.verified;
     dropped += verification.dropped;
+
+    // Subset rule: accept the retry's answer iff (a) it is not refused,
+    // (b) its numbers are a subset of the first-turn's, and (c) every
+    // remaining figure is covered by a verified quote. Otherwise keep the
+    // first-turn answer and let the existing coverage check refuse below.
+    const retryNumbers = extractNumbers(secondParsed.answer);
+    const firstNumbers = extractNumbers(firstParsed.answer);
+    const retryCoverage = numbersCovered(secondParsed.answer, verified.map((v) => v.quote));
+    if (
+      !secondParsed.refused &&
+      secondParsed.answer.length > 0 &&
+      isNumberSubset(retryNumbers, firstNumbers) &&
+      retryCoverage.uncovered.length === 0
+    ) {
+      if (secondParsed.answer !== firstParsed.answer) answer_revised = true;
+      answer = secondParsed.answer;
+    }
   }
 
   if (!refused && verified.length === 0) {
     refused = true;
     refusal_reason = "ungrounded: no citation could be verified against the retrieved passages";
-    answer = "";
-    verified = [];
   }
 
   if (!refused) {
@@ -229,12 +250,16 @@ export async function askGrounded(
     if (uncovered.length > 0) {
       refused = true;
       refusal_reason = `ungrounded: ${uncovered.length} figure(s) lack a verified citation: ${uncovered.join(", ")}`;
-      answer = "";
-      verified = [];
     }
   }
 
-  if (refused) verified = [];
+  // Refusals are figure-free by construction: no answer text, no citations,
+  // and a refusal_reason that carries no numbers.
+  if (refused) {
+    answer = "";
+    verified = [];
+    refusal_reason = sanitizeRefusalReason(refusal_reason);
+  }
 
   const result: GroundedResult = {
     question,
@@ -246,6 +271,7 @@ export async function askGrounded(
     model,
     latency_ms: Date.now() - started,
     retried,
+    answer_revised,
     uncovered_numbers: uncovered,
     usage,
   };

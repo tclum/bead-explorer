@@ -51,6 +51,27 @@ documents with per-value provenance, gated by an eval harness.
   Selftest gained cases `l` (must-fail: figure missing from every verified
   quote) and `m` (must-pass: quote verbatim in a retrieved chunk other than
   labeled → kept with `reattributed=true`).
+- **2026-09-16** Slice 1 deployed to https://bead-explorer.vercel.app (commit
+  `1b5ebfe`); deployed-route smoke: grounded answer and refusal both
+  verified.
+- **2026-09-16** — Refusal path hardened. Retry may now revise the answer
+  under the subset rule: the retry's answer is accepted iff (a) it is not
+  refused, (b) `extractNumbers(retryAnswer)` is a subset of
+  `extractNumbers(firstAnswer)` (drops allowed, additions not), and (c)
+  every remaining figure is covered by a verified quote after merging
+  citations. The follow-up message tells the model plainly: "You may
+  remove any figure you cannot cite verbatim; you may not add new figures
+  or new claims." Refusals are figure-free by construction: `answer=""`,
+  `citations=[]`, and any figure-bearing `refusal_reason` is rewritten to
+  a fixed generic sentence. `GroundedResult` gained `answer_revised`.
+  `assertFixture` for refusal fixtures gained a `figures` check that runs
+  `extractNumbers` over `answer + " " + refusal_reason`. Selftest gained
+  cases `n` (must-fail: refusal with a figure in the reason) and `o`
+  (must-pass: retry revised the answer to drop one figure, every remaining
+  figure covered). `pnpm ask "<q>"` runs `askGrounded` locally and prints
+  the `GroundedResult` (JSON, minus `retrieved` unless `--retrieved`).
+  `pnpm smoke <base-url>` POSTs the challenge-count and Texas-allocation
+  probes to the deployed route and enforces the same contract.
 
 ## Pipeline deviations from the original Slice 1 prompt, with reasons
 
@@ -77,6 +98,14 @@ documents with per-value provenance, gated by an eval harness.
   the full 10-fixture run burned a large fraction of a day's API spend today.
   A cold session should reach for `--only` first when investigating a single
   fixture; the full suite is the greenlight check, not the tuning loop.
+- **Do not loop the full eval between gates; use `pnpm eval --only <id>`.**
+  A gate is three consecutive full runs, about $0.30 with caching.
+
+## Deploy
+
+- **Vercel project `bead-explorer`, team `tclum-4994s-projects`,
+  git-connected**: push to `main` deploys production, other branches
+  preview. Verification after deploy: `pnpm smoke https://bead-explorer.vercel.app`.
 
 ## Do not touch
 
@@ -84,7 +113,12 @@ documents with per-value provenance, gated by an eval harness.
 
 ## Open questions
 
-(empty)
+- **2026-09-16 research**: would numbered passage labels (`[1]..[12]`)
+  reduce mislabeled citations? Two of three citations on the deployed
+  challenge question were re-attributed. Measure re-attributed counts over
+  three eval runs with each labeling before changing anything.
+- **2026-09-16 task**: upgrade Node on MacBook-Pro-437 from 20.11.1 to 22
+  LTS between slices; Vercel CLI dependencies warn on 20.11.
 
 ## Not yet specified
 
@@ -106,6 +140,11 @@ documents with per-value provenance, gated by an eval harness.
 - Claim coverage is numeric only. Names and dates rendered as prose (e.g.,
   "the Final Proposal", "August 2024") are not claim-checked; only the digit
   runs a claim contains are checked against the citation quotes.
+- Refusal explanations are model text checked only for figures, not for
+  claims. A figure-free reason is passed through as-is; a reason with
+  digits is replaced by a fixed generic sentence.
+- Number coverage is numeric only; names and dates in prose are not
+  claim-checked.
 
 ## Out of scope
 

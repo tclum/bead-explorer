@@ -151,6 +151,38 @@
         { "id": "x:p1:1", "doc": "x", "page": 1, "text": "The Hawaiʻi allocation is $100 exactly, per Section 1.", "url": "http://x.example/", "page_url": "http://x.example/#page=1", "score": 3.1 },
         { "id": "y:p1:1", "doc": "y", "page": 1, "text": "Coverage started in 2024 and covers 42 counties.", "url": "http://y.example/", "page_url": "http://y.example/#page=1", "score": 2.9 }
       ]
+    },
+    {
+      "letter": "n",
+      "kind": "must_fail",
+      "reason": "refusal whose refusal_reason contains a figure — refusals must be figure-free",
+      "fixture": { "id": "n", "question": "What is the allocation?", "expect": { "refuse": true } },
+      "raw": {
+        "answer": "",
+        "refused": true,
+        "refusal_reason": "ungrounded: 1 figure(s) lack a verified citation: 42",
+        "citations": []
+      },
+      "retrieved": [
+        { "id": "x:p1:1", "doc": "x", "page": 1, "text": "The Hawaiʻi allocation is $100 exactly, per Section 1.", "url": "http://x.example/", "page_url": "http://x.example/#page=1", "score": 3.1 }
+      ]
+    },
+    {
+      "letter": "o",
+      "kind": "must_pass",
+      "reason": "answer was revised on retry to drop one figure; every remaining figure is covered",
+      "fixture": { "id": "o", "question": "When did coverage start?", "expect": { "refuse": false, "cite": [["y", 1]], "answer_contains": [["2024"]] } },
+      "raw": {
+        "answer": "Coverage started in 2024.",
+        "refused": false,
+        "citations": [{ "passage_id": "y:p1:1", "quote": "Coverage started in 2024 and covers 42 counties." }]
+      },
+      "retrieved": [
+        { "id": "x:p1:1", "doc": "x", "page": 1, "text": "The Hawaiʻi allocation is $100 exactly, per Section 1.", "url": "http://x.example/", "page_url": "http://x.example/#page=1", "score": 3.1 },
+        { "id": "y:p1:1", "doc": "y", "page": 1, "text": "Coverage started in 2024 and covers 42 counties.", "url": "http://y.example/", "page_url": "http://y.example/#page=1", "score": 2.9 }
+      ],
+      "retried": true,
+      "answer_revised": true
     }
   ],
   "statusCases": [

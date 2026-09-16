@@ -40,16 +40,23 @@ converts it to a refusal — the model's word is never trusted.
 number, date, dollar amount, and percentage in the answer must appear as a
 whole token (non-digit/non-decimal boundary on each side) in the
 comma-stripped concatenation of the verified quotes. If not, the server sends
-one follow-up turn in the same conversation asking the model to add citations
-for the missing figures or remove those figures. The follow-up hints which
-retrieved passages contain each uncovered number. **The first-turn answer is
-kept for stability across the retry; only citations from the retry are
-merged in.** This means retry can only add citations, never restructure the
-answer. If figures still lack citations after the merge, the answer is
-converted to a refusal with reason
-`ungrounded: N figure(s) lack a verified citation: <list>`.
-`retried` and `uncovered_numbers` are surfaced in `GroundedResult` and in
-the UI.
+one follow-up turn in the same conversation telling the model that it may
+remove any figure it cannot cite verbatim, but may not add new figures or
+new claims. The follow-up hints which retrieved passages contain each
+uncovered number. Citations from both turns are merged and re-verified.
+The retry's answer is accepted only if (a) it is not refused, (b) the
+figures it contains are a subset of the first turn's, and (c) every
+remaining figure is covered by a verified quote — otherwise the first-turn
+answer stands. If figures still lack citations after the merge, the
+answer is converted to a refusal. `retried`, `answer_revised`, and
+`uncovered_numbers` are surfaced in `GroundedResult` and in the UI.
+
+**Refusals carry no figures and no citations.** Whenever the final result
+has `refused: true` — whether the model refused directly or the server
+converted the answer — the server empties `answer`, empties `citations`,
+and rewrites `refusal_reason` to a generic figure-free sentence if the
+model's own reason contains any digit. A figure-free model reason (e.g.
+"the passages cover Hawaiʻi, not Texas") is kept as-is.
 
 **Prompt caching.** The system prompt and the passages block carry
 `cache_control: ephemeral`, so the first turn and the retry turn share a
@@ -99,6 +106,19 @@ pnpm fetch:fcc     # refresh data/fcc-hi-summary.csv
 pnpm dev           # http://localhost:3000
 pnpm eval          # live eval (needs API key)
 pnpm eval --selftest  # offline assertion self-test
+pnpm ask "<question>" [--retrieved]   # run askGrounded locally and print the GroundedResult
+pnpm smoke <base-url>                 # POST two probe questions to a deployed route and verify the contract
+```
+
+## Deploy
+
+Deploys to Vercel via git connection: pushing to `main` deploys production;
+pushing to any other branch produces a preview. The Vercel project is
+`bead-explorer` under team `tclum-4994s-projects`. `npx vercel --prod` is
+not needed. After a push, verify the deployed route with:
+
+```bash
+pnpm smoke https://bead-explorer.vercel.app
 ```
 
 ## License
