@@ -81,3 +81,30 @@ paragraphs.
 - `raw/fp_locations_approved.xlsx` — original NTIA Final Proposal
   approved-locations workbook.
 - `raw/hi-counties-tigerweb.geojson` — original TIGERweb response.
+- `pages/<page>.json` — page-scoped figures with per-value provenance.
+  Hand-written. One file per workflow page under `src/app/<page>/`.
+
+## `data/pages/<page>.json` format
+
+Each file describes the figures on one page. Shape (`pageVersion: 1`):
+
+- `page`, `title` — routing slug and page heading.
+- `items[]` — headline tiles. Each has `key, label, value` (string or number)
+  and `source: { doc, page, quote }`.
+- `phases[]` — process phases. Each has `key, label, value` and `source`.
+- `breakdowns[]` — proportional tables. Each has `key, title, sum_expected`
+  (integer), optional `note`, and `rows[]` where each row has
+  `label, value` (integer) and `source`. Rows must sum to `sum_expected`;
+  when they don't, the page renders the mismatch in-line and the `note`
+  explains it.
+- `who[]`, `evidence[]` — supporting list items, each with a `source`.
+
+Gates enforced by `pnpm eval` (per file, always run):
+
+- Every `source.quote` normalizes to a substring of the ingested text at
+  `doc:page` (same rule as `status.json` — see `assertQuoteInCorpus`).
+- For each breakdown, the row values sum to `sum_expected` exactly.
+
+`pnpm eval --selftest` covers three page-data cases:
+`x` (a quote that isn't in the canned corpus, must fail), `y` (rows that
+don't sum, must fail), `z` (a valid two-row page, must pass).

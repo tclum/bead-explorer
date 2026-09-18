@@ -1,6 +1,6 @@
 import { normalize } from "./normalize";
 import { extractNumbers, numbersCovered } from "./verify";
-import type { Chunk, GroundedResult, StatusItem } from "./types";
+import type { Chunk, GroundedResult, PageFile, PageSource, StatusItem } from "./types";
 
 export type FixtureExpect =
   | {
@@ -184,6 +184,25 @@ export function assertCountyGeojson(
   return { ok: true };
 }
 
+export function assertQuoteInCorpus(
+  source: PageSource,
+  index: CorpusIndex,
+): { ok: boolean; reason?: string } {
+  const chunks = index.chunksByDocPage.get(`${source.doc}:${source.page}`);
+  if (!chunks || chunks.length === 0) {
+    return { ok: false, reason: `no chunks for ${source.doc} p.${source.page}` };
+  }
+  const nq = normalize(source.quote);
+  const hit = chunks.some((c) => normalize(c.text).includes(nq));
+  if (!hit) {
+    return {
+      ok: false,
+      reason: `quote not found in ${source.doc} p.${source.page}: ${JSON.stringify(source.quote)}`,
+    };
+  }
+  return { ok: true };
+}
+
 export function assertStatusItem(
   item: StatusItem,
   index: CorpusIndex,
@@ -201,13 +220,42 @@ export function assertStatusItem(
     }
     return { ok: true };
   }
-  const src = item.source;
-  const chunks = index.chunksByDocPage.get(`${src.doc}:${src.page}`);
-  if (!chunks || chunks.length === 0) {
-    return { ok: false, reason: `no chunks for ${src.doc} p.${src.page}` };
+  return assertQuoteInCorpus(item.source, index);
+}
+
+export function assertPageData(
+  page: PageFile,
+  index: CorpusIndex,
+): { ok: boolean; failures: string[] } {
+  const failures: string[] = [];
+  for (const it of page.items) {
+    const r = assertQuoteInCorpus(it.source, index);
+    if (!r.ok) failures.push(`items[${it.key}] ${r.reason}`);
   }
-  const nq = normalize(src.quote);
-  const hit = chunks.some((c) => normalize(c.text).includes(nq));
-  if (!hit) return { ok: false, reason: `quote not found in ${src.doc} p.${src.page}: ${JSON.stringify(src.quote)}` };
-  return { ok: true };
+  for (const ph of page.phases) {
+    const r = assertQuoteInCorpus(ph.source, index);
+    if (!r.ok) failures.push(`phases[${ph.key}] ${r.reason}`);
+  }
+  for (const b of page.breakdowns) {
+    let sum = 0;
+    for (const row of b.rows) {
+      const r = assertQuoteInCorpus(row.source, index);
+      if (!r.ok) failures.push(`breakdowns[${b.key}].rows[${row.label}] ${r.reason}`);
+      sum += row.value;
+    }
+    if (sum !== b.sum_expected) {
+      failures.push(
+        `breakdowns[${b.key}] rows sum to ${sum}, expected ${b.sum_expected}`,
+      );
+    }
+  }
+  for (const w of page.who) {
+    const r = assertQuoteInCorpus(w.source, index);
+    if (!r.ok) failures.push(`who[${w.key}] ${r.reason}`);
+  }
+  for (const e of page.evidence) {
+    const r = assertQuoteInCorpus(e.source, index);
+    if (!r.ok) failures.push(`evidence[${e.type}] ${r.reason}`);
+  }
+  return { ok: failures.length === 0, failures };
 }

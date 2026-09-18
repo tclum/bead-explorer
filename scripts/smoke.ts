@@ -2,13 +2,14 @@ import { readFileSync } from "node:fs";
 import { execSync } from "node:child_process";
 import path from "node:path";
 import { assertFixture, type Fixture } from "../src/lib/assert";
-import type { GroundedResult } from "../src/lib/types";
+import type { GroundedResult, PageFile } from "../src/lib/types";
 
-const SMOKE_VERSION = "smoke v0.3.0";
+const SMOKE_VERSION = "smoke v0.4.0";
 const ROOT = process.cwd();
 const FIXTURES_PATH = path.join(ROOT, "eval", "fixtures.json");
 const FCC_CSV_PATH = path.join(ROOT, "data", "fcc-hi-summary.csv");
 const BEAD_CSV_PATH = path.join(ROOT, "data", "bead-hi-project-areas.csv");
+const CHALLENGE_PAGE_PATH = path.join(ROOT, "data", "pages", "challenge.json");
 const TIMEOUT_MS = 45_000;
 
 const COUNTY_GEOIDS = ["15001", "15003", "15005", "15007", "15009"];
@@ -71,8 +72,8 @@ type VersionResult =
 
 type PageResult = { ok: true; body: string } | { ok: false; error: string };
 
-async function fetchRoot(baseUrl: string): Promise<PageResult> {
-  const url = new URL("/", baseUrl).toString();
+async function fetchPage(baseUrl: string, pathname: string): Promise<PageResult> {
+  const url = new URL(pathname, baseUrl).toString();
   const ac = new AbortController();
   const t = setTimeout(() => ac.abort(), TIMEOUT_MS);
   try {
@@ -85,6 +86,13 @@ async function fetchRoot(baseUrl: string): Promise<PageResult> {
   } finally {
     clearTimeout(t);
   }
+}
+
+function frameChecks(body: string): { fontsOk: boolean; stampOk: boolean } {
+  return {
+    fontsOk: !body.includes("fonts.googleapis"),
+    stampOk: body.includes('name="build-stamp"'),
+  };
 }
 
 async function fetchVersion(baseUrl: string): Promise<VersionResult> {
@@ -204,9 +212,9 @@ async function main() {
   // Check 3: GET / — the page must contain the formatted FCC unserved count for
   // every county and the formatted BEAD total for every project area, values
   // read at run time from the committed CSVs so the probe is data-driven.
-  const page = await fetchRoot(baseUrl!);
-  if (!page.ok) {
-    bufLog(`FAIL / fetch: ${page.error}`);
+  const home = await fetchPage(baseUrl!, "/");
+  if (!home.ok) {
+    bufLog(`FAIL / fetch: ${home.error}`);
     failures += 1;
   } else {
     const fccRows = parseCsv(readFileSync(FCC_CSV_PATH, "utf8"));
@@ -219,16 +227,65 @@ async function main() {
     const beadExpect = beadRows.map((row) => ({ county: row["county"], total: formatCount(Number(row["total"])) }));
     const missing: string[] = [];
     for (const e of fccExpect) {
-      if (!page.body.includes(e.unserved)) missing.push(`FCC ${e.geoid} unserved="${e.unserved}"`);
+      if (!home.body.includes(e.unserved)) missing.push(`FCC ${e.geoid} unserved="${e.unserved}"`);
     }
     for (const e of beadExpect) {
-      if (!page.body.includes(e.total)) missing.push(`BEAD ${e.county} total="${e.total}"`);
+      if (!home.body.includes(e.total)) missing.push(`BEAD ${e.county} total="${e.total}"`);
     }
-    if (missing.length === 0) {
-      bufLog(`PASS / fcc_counties=${fccExpect.length} bead_areas=${beadExpect.length}`);
+    const frame = frameChecks(home.body);
+    const framePart = `fonts=${frame.fontsOk ? "self-hosted" : "google"} stamp=${frame.stampOk ? "ok" : "missing"}`;
+    if (missing.length === 0 && frame.fontsOk && frame.stampOk) {
+      bufLog(`PASS / fcc_counties=${fccExpect.length} bead_areas=${beadExpect.length} ${framePart}`);
     } else {
       failures += 1;
-      bufLog(`FAIL / missing ${missing.length}: ${missing.join("; ")}`);
+      const missPart = missing.length === 0 ? "" : ` missing ${missing.length}: ${missing.join("; ")}`;
+      bufLog(`FAIL / ${framePart}${missPart}`);
+    }
+  }
+
+  // Check 4: GET /challenge — the page must carry a data-item="key|value"
+  // attribute for every numeric items entry and a data-row="key|label|value"
+  // attribute for every breakdown row from data/pages/challenge.json. Values
+  // are formatted with the same formatCount used by the page, and the smoke
+  // asserts the exact attribute string appears in the HTML — a plain
+  // substring check would pass on any run of digits in surrounding markup.
+  const challengePage = JSON.parse(readFileSync(CHALLENGE_PAGE_PATH, "utf8")) as PageFile;
+  const challengeExpect: { label: string; needle: string }[] = [];
+  for (const it of challengePage.items) {
+    if (typeof it.value === "number") {
+      challengeExpect.push({
+        label: `items[${it.key}]`,
+        needle: `data-item="${it.key}|${formatCount(it.value)}"`,
+      });
+    }
+  }
+  for (const b of challengePage.breakdowns) {
+    for (const row of b.rows) {
+      challengeExpect.push({
+        label: `breakdowns[${b.key}].${row.label}`,
+        needle: `data-row="${b.key}|${row.label}|${formatCount(row.value)}"`,
+      });
+    }
+  }
+  const challenge = await fetchPage(baseUrl!, "/challenge");
+  if (!challenge.ok) {
+    bufLog(`FAIL /challenge fetch: ${challenge.error}`);
+    failures += 1;
+  } else {
+    const missingCh: string[] = [];
+    for (const e of challengeExpect) {
+      if (!challenge.body.includes(e.needle)) {
+        missingCh.push(`${e.label} needle=${JSON.stringify(e.needle)}`);
+      }
+    }
+    const frame = frameChecks(challenge.body);
+    const framePart = `fonts=${frame.fontsOk ? "self-hosted" : "google"} stamp=${frame.stampOk ? "ok" : "missing"}`;
+    if (missingCh.length === 0 && frame.fontsOk && frame.stampOk) {
+      bufLog(`PASS /challenge values=${challengeExpect.length} ${framePart}`);
+    } else {
+      failures += 1;
+      const missPart = missingCh.length === 0 ? "" : ` missing ${missingCh.length}: ${missingCh.join("; ")}`;
+      bufLog(`FAIL /challenge ${framePart}${missPart}`);
     }
   }
 

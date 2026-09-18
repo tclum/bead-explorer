@@ -1,0 +1,69 @@
+{
+  "pageVersion": 1,
+  "page": "challenge",
+  "title": "Challenge process",
+  "items": [
+    { "key": "total", "label": "Challenges received", "value": 37593,
+      "source": { "doc": "uhbo-challenge", "page": 1, "quote": "Total Challenges Received – 37,593" } },
+    { "key": "held", "label": "Held", "value": "August 19 to December 7, 2024",
+      "source": { "doc": "uhbo-challenge", "page": 1, "quote": "The Hawaiʻi Broadband Equity, Access, and Deployment (BEAD) Challenge Process was held between August 19, 2024 and December 7, 2024." } },
+    { "key": "approved", "label": "Results approved by NTIA", "value": "December 20, 2024",
+      "source": { "doc": "uhbo-challenge", "page": 1, "quote": "Hawai’i received NTIA approval of its Challenge Process results on December 20, 2024." } },
+    { "key": "vintage", "label": "Location data used", "value": "FCC National Broadband Map, December 31, 2023",
+      "source": { "doc": "uhbo-challenge", "page": 1, "quote": "Data based on FCC NBAM December 31, 2023." } }
+  ],
+  "phases": [
+    { "key": "challenge", "label": "Challenge phase", "value": "August 19 to September 18, 2024",
+      "source": { "doc": "fp", "page": 16, "quote": "Challenge Phase: August 19, 2024 – September 18, 2024 (30 days)" } },
+    { "key": "rebuttal", "label": "Rebuttal phase", "value": "October 7 to November 6, 2024",
+      "source": { "doc": "fp", "page": 16, "quote": "Rebuttal Phase: October 7, 2024 – November 6, 2024 (30 days)" } },
+    { "key": "determination", "label": "Final determination phase", "value": "November 7 to December 7, 2024",
+      "source": { "doc": "fp", "page": 16, "quote": "Final Determination Phase: November 7, 2024 – December 7, 2024 (30 days)" } }
+  ],
+  "breakdowns": [
+    { "key": "challenger_type", "title": "Challenges received by challenger type", "sum_expected": 37593,
+      "rows": [
+        { "label": "Eligible Entity", "value": 24606, "source": { "doc": "uhbo-challenge", "page": 1, "quote": "Eligible Entity – 24,606" } },
+        { "label": "Local government", "value": 180, "source": { "doc": "uhbo-challenge", "page": 1, "quote": "Local Government Challenges Received – 180" } },
+        { "label": "Nonprofit", "value": 88, "source": { "doc": "uhbo-challenge", "page": 1, "quote": "Nonprofit Challenges Received – 88" } },
+        { "label": "Service provider", "value": 12719, "source": { "doc": "uhbo-challenge", "page": 1, "quote": "Service Provider Challenges Received – 12,719" } }
+      ] },
+    { "key": "challenge_type", "title": "Challenges received by challenge type", "sum_expected": 37595,
+      "note": "The six published type counts sum to 37,595; the page's stated total is 37,593. The source does not explain the difference.",
+      "rows": [
+        { "label": "Availability (A)", "value": 9812, "source": { "doc": "uhbo-challenge", "page": 1, "quote": "Availability (A) – 9,812" } },
+        { "label": "Business service only (B)", "value": 2, "source": { "doc": "uhbo-challenge", "page": 1, "quote": "Business Service Only (B) – 2" } },
+        { "label": "Enforceable commitment (E)", "value": 15057, "source": { "doc": "uhbo-challenge", "page": 1, "quote": "Enforceable Commitment (E) – 15,057" } },
+        { "label": "Planned service (P)", "value": 12719, "source": { "doc": "uhbo-challenge", "page": 1, "quote": "Planned Service (P) – 12,719" } },
+        { "label": "Speed (S)", "value": 3, "source": { "doc": "uhbo-challenge", "page": 1, "quote": "Speed (S) – 3" } },
+        { "label": "Location is a CAI (C)", "value": 2, "source": { "doc": "uhbo-challenge", "page": 1, "quote": "Location is a CAI (C) – 2" } }
+      ] },
+    { "key": "disposition", "title": "Challenges resolved by disposition", "sum_expected": 37593,
+      "rows": [
+        { "label": "Sustained (S)", "value": 312, "source": { "doc": "uhbo-challenge", "page": 1, "quote": "Sustained (S) – 312" } },
+        { "label": "Rejected (R)", "value": 9408, "source": { "doc": "uhbo-challenge", "page": 1, "quote": "Rejected (R) – 9,408" } },
+        { "label": "Incomplete (I)", "value": 799, "source": { "doc": "uhbo-challenge", "page": 1, "quote": "Incomplete (I) – 799" } },
+        { "label": "Provider agreed with the challenge (A)", "value": 14, "source": { "doc": "uhbo-challenge", "page": 1, "quote": "The provider agreed with the challenge (A) – 14" } },
+        { "label": "Provider did not respond within the rebuttal deadline (N)", "value": 27050, "source": { "doc": "uhbo-challenge", "page": 1, "quote": "The provider did not respond within the rebuttal deadline (N) – 27,050" } },
+        { "label": "Moot: another successful challenge for the same location (M)", "value": 10, "source": { "doc": "uhbo-challenge", "page": 1, "quote": "The challenge was not resolved since it was moot due to another successful challenge for the same location (M) – 10" } }
+      ] }
+  ],
+  "who": [
+    { "key": "nonprofits", "label": "Nonprofits", "source": { "doc": "uhbo-challenge", "page": 1, "quote": "Nonprofits, including IRS nonprofit organizations and Native Hawaiian Homestead & Beneficiary Associations registered with the U.S." } },
+    { "key": "local_government", "label": "Units of local government", "source": { "doc": "uhbo-challenge", "page": 1, "quote": "Units of local government" } },
+    { "key": "isps", "label": "Internet service providers", "source": { "doc": "uhbo-challenge", "page": 1, "quote": "Internet service providers" } },
+    { "key": "public", "label": "Members of the public", "source": { "doc": "uhbo-challenge", "page": 1, "quote": "Members of the public cannot directly submit challenges during the Challenge Process, however, individuals may contribute information through our web portal to help an Eligible Entity submit Challenges." } },
+    { "key": "area", "label": "Area challenges", "source": { "doc": "cpg", "page": 16, "quote": "An area challenge reverses the burden of proof for availability, speed, latency, data cap and technology challenges if a defined number of challenges for a particular category, across all challengers, have been submitted for a provider and moved to the Rebuttal Phase." } }
+  ],
+  "evidence": [
+    { "type": "Availability", "source": { "doc": "cpg", "page": 19, "quote": "When filing availability challenges, you will be required to select one of the following reasons and provide evidence for each challenge." } },
+    { "type": "Speed", "source": { "doc": "cpg", "page": 25, "quote": "Each speed test consists of three (3) measurements, taken on different days." } },
+    { "type": "Latency", "source": { "doc": "cpg", "page": 27, "quote": "Latency Challenges must provide evidence that the round-trip latency of the broadband service exceeds 100 milliseconds (ms)." } },
+    { "type": "Data cap, technology, business service only", "source": { "doc": "cpg", "page": 23, "quote": "The Data Cap, Technology, and Business Service Only challenge requirements are similar to those for Availability challenges." } },
+    { "type": "Enforceable commitment", "source": { "doc": "cpg", "page": 29, "quote": "The Enforceable Commitment Challenge allows Permissible Challengers to provide evidence that an unserved or underserved locations have an existing federal, state, or local funding that should make those locations ineligible for BEAD." } },
+    { "type": "Not part of an enforceable commitment", "source": { "doc": "cpg", "page": 30, "quote": "The Not Enforceable Commitment Challenge allows Permissible Challengers to provide evidence that a location is not covered by an Enforceable Commitment identified by UHBO." } },
+    { "type": "Planned service", "source": { "doc": "cpg", "page": 31, "quote": "If a provider began building out broadband service to unserved and/or underserved locations, they may challenge under the “Planned Service” subtype and provide evidence that service will be available to the locations by June 30, 2024." } },
+    { "type": "Existing service", "source": { "doc": "cpg", "page": 32, "quote": "If a provider completed broadband deployment to locations currently designated as unserved and/or underserved locations, they may challenge under the “Existing Service” challenge type and provide evidence that service is currently available." } },
+    { "type": "Location is not a CAI", "source": { "doc": "cpg", "page": 38, "quote": "If you believe that a location is incorrectly identified as a CAI, you may challenge to have that location removed from the CAI list." } }
+  ]
+}

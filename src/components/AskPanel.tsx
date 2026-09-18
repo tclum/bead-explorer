@@ -4,14 +4,16 @@ import { useEffect, useRef, useState } from "react";
 import type { GroundedResult } from "@/lib/types";
 import Receipts from "./Receipts";
 
-const CHIPS: { id: string; label: string; question: string }[] = [
+export type AskChip = { id: string; label: string; question: string };
+
+const DEFAULT_CHIPS: AskChip[] = [
   { id: "f09", label: "About the program", question: "Tell me about Hawaiʻi's BEAD program." },
   { id: "f03", label: "Challenge process dates", question: "What were the dates of the challenge, rebuttal, and final determination phases of Hawaiʻi's BEAD challenge process?" },
   { id: "f06", label: "Who got the awards?", question: "Which companies received Hawaiʻi's BEAD deployment awards, and how long is each one's period of performance?" },
   { id: "r02", label: "Locations connected so far", question: "How many locations has Hawaiian Telcom connected with BEAD funds so far?" },
 ];
 
-export default function AskPanel() {
+export default function AskPanel({ chips = DEFAULT_CHIPS }: { chips?: AskChip[] } = {}) {
   const [question, setQuestion] = useState<string>("");
   const [result, setResult] = useState<GroundedResult | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -104,7 +106,7 @@ export default function AskPanel() {
             {question.trim().length}/300
           </span>
           <div className="flex flex-wrap gap-2 md:ml-2">
-            {CHIPS.map((c) => (
+            {chips.map((c) => (
               <button
                 key={c.id}
                 type="button"

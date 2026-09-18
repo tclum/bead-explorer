@@ -1,8 +1,7 @@
 import type { Metadata } from "next";
 import { Fraunces, JetBrains_Mono } from "next/font/google";
 import "./globals.css";
-
-const BUILD_SHA = process.env.VERCEL_GIT_COMMIT_SHA ?? process.env.GIT_SHA ?? "dev";
+import { BUILD_SHA } from "@/lib/build";
 
 const fraunces = Fraunces({
   subsets: ["latin", "latin-ext"],

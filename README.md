@@ -17,6 +17,20 @@ FCC, or any vendor. Public data only.
   receipts with links back to the source page.
 - Refuses when the corpus does not contain the answer.
 
+## Pages
+
+- **`/`** — Overview: program status tiles, county gap map + table, Ask box, corpus list.
+- **`/challenge`** — Challenge process: tiles, three phases, three breakdowns
+  (by challenger type, by challenge type, by disposition), who could file, and
+  what evidence counted, plus the Ask box.
+
+Every numeric figure on a page lives in `data/pages/<page>.json` with a
+receipt (verbatim quote, doc, PDF page). `pnpm eval` checks each receipt
+against the corpus and asserts each breakdown's rows sum to `sum_expected`;
+`pnpm smoke` fetches each page and asserts every formatted figure appears
+in the HTML. The UHBO Challenge Process page's own type counts sum to
+37,595 against a stated total of 37,593; the page shows both.
+
 ## Where the gaps are
 
 The section between the status panel and the Ask box renders two views of

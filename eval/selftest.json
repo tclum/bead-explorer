@@ -315,6 +315,82 @@
       "kind_check": "bead-project-areas",
       "csv": "county,unserved,underserved,total,fiber,leo\nHawaii,5012,196,5208,4146,1062\nHonolulu,877,20,897,881,16\nKauai,141,4,145,68,77\nMaui,600,157,757,627,130\n",
       "expected_row_count": 7009
+    },
+    {
+      "letter": "x",
+      "kind": "must_fail",
+      "reason": "page whose one breakdown row quote is not in the canned corpus",
+      "kind_check": "page-data",
+      "page": {
+        "pageVersion": 1,
+        "page": "selftest-x",
+        "title": "selftest x",
+        "items": [],
+        "phases": [],
+        "breakdowns": [
+          {
+            "key": "b1",
+            "title": "b1",
+            "sum_expected": 100,
+            "rows": [
+              { "label": "row1", "value": 100, "source": { "doc": "x", "page": 1, "quote": "THIS QUOTE IS NOT IN THE CANNED CORPUS AT ALL" } }
+            ]
+          }
+        ],
+        "who": [],
+        "evidence": []
+      }
+    },
+    {
+      "letter": "y",
+      "kind": "must_fail",
+      "reason": "page whose breakdown rows do not sum to sum_expected",
+      "kind_check": "page-data",
+      "page": {
+        "pageVersion": 1,
+        "page": "selftest-y",
+        "title": "selftest y",
+        "items": [],
+        "phases": [],
+        "breakdowns": [
+          {
+            "key": "b1",
+            "title": "b1",
+            "sum_expected": 999,
+            "rows": [
+              { "label": "row1", "value": 100, "source": { "doc": "x", "page": 1, "quote": "The Hawaiʻi allocation is $100 exactly" } }
+            ]
+          }
+        ],
+        "who": [],
+        "evidence": []
+      }
+    },
+    {
+      "letter": "z",
+      "kind": "must_pass",
+      "reason": "valid two-row page whose quotes are in the canned corpus and whose rows sum to sum_expected",
+      "kind_check": "page-data",
+      "page": {
+        "pageVersion": 1,
+        "page": "selftest-z",
+        "title": "selftest z",
+        "items": [],
+        "phases": [],
+        "breakdowns": [
+          {
+            "key": "b1",
+            "title": "b1",
+            "sum_expected": 142,
+            "rows": [
+              { "label": "row1", "value": 100, "source": { "doc": "x", "page": 1, "quote": "The Hawaiʻi allocation is $100 exactly" } },
+              { "label": "row2", "value": 42, "source": { "doc": "y", "page": 1, "quote": "Coverage started in 2024 and covers 42 counties" } }
+            ]
+          }
+        ],
+        "who": [],
+        "evidence": []
+      }
     }
   ]
 }

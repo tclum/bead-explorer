@@ -115,3 +115,41 @@ export type StatusFile = {
   statusVersion: number;
   items: StatusItem[];
 };
+
+export type PageSource = { doc: string; page: number; quote: string };
+export type PageItem = {
+  key: string;
+  label: string;
+  value: string | number;
+  source: PageSource;
+};
+export type PagePhase = {
+  key: string;
+  label: string;
+  value: string;
+  source: PageSource;
+};
+export type PageBreakdownRow = {
+  label: string;
+  value: number;
+  source: PageSource;
+};
+export type PageBreakdown = {
+  key: string;
+  title: string;
+  sum_expected: number;
+  note?: string;
+  rows: PageBreakdownRow[];
+};
+export type PageWho = { key: string; label: string; source: PageSource };
+export type PageEvidence = { type: string; source: PageSource };
+export type PageFile = {
+  pageVersion: number;
+  page: string;
+  title: string;
+  items: PageItem[];
+  phases: PagePhase[];
+  breakdowns: PageBreakdown[];
+  who: PageWho[];
+  evidence: PageEvidence[];
+};

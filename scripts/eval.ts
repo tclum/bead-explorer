@@ -1,15 +1,16 @@
-import { readFileSync, existsSync } from "node:fs";
+import { readFileSync, readdirSync, existsSync } from "node:fs";
 import path from "node:path";
 import {
   assertBeadProjectAreas,
   assertCountyGeojson,
   assertFixture,
+  assertPageData,
   assertStatusItem,
   buildCorpusIndex,
   type Fixture,
 } from "../src/lib/assert";
 import { verifyCitations, withholdUncoveredSentences } from "../src/lib/verify";
-import type { Corpus, GroundedResult, RetrievedChunk, StatusFile, Usage, VerifiedCitation, Citation, StatusItem } from "../src/lib/types";
+import type { Corpus, GroundedResult, PageFile, RetrievedChunk, StatusFile, Usage, VerifiedCitation, Citation, StatusItem } from "../src/lib/types";
 
 const ROOT = process.cwd();
 const CORPUS_PATH = path.join(ROOT, "data", "corpus.json");
@@ -20,6 +21,7 @@ const FCC_CSV_PATH = path.join(ROOT, "data", "fcc-hi-summary.csv");
 const BEAD_CSV_PATH = path.join(ROOT, "data", "bead-hi-project-areas.csv");
 const BEAD_META_PATH = path.join(ROOT, "data", "bead-hi-project-areas.meta.json");
 const GEOJSON_PATH = path.join(ROOT, "data", "hi-counties.geojson");
+const PAGES_DIR = path.join(ROOT, "data", "pages");
 const EXPECTED_HI_GEOIDS = ["15001", "15003", "15005", "15007", "15009"];
 const ENV_LOCAL_PATH = path.join(ROOT, ".env.local");
 const EVAL_VERSION = "eval v0.1.0";
@@ -134,14 +136,22 @@ async function selftest(): Promise<never> {
     reason: string;
     item: StatusItem;
   };
-  type DataCase = {
-    letter: string;
-    kind: "must_pass" | "must_fail";
-    reason: string;
-    kind_check: "bead-project-areas";
-    csv: string;
-    expected_row_count: number;
-  };
+  type DataCase =
+    | {
+        letter: string;
+        kind: "must_pass" | "must_fail";
+        reason: string;
+        kind_check: "bead-project-areas";
+        csv: string;
+        expected_row_count: number;
+      }
+    | {
+        letter: string;
+        kind: "must_pass" | "must_fail";
+        reason: string;
+        kind_check: "page-data";
+        page: PageFile;
+      };
   const raw = JSON.parse(readFileSync(SELFTEST_PATH, "utf8")) as {
     corpus: { id: string; doc: string; page: number; text: string; url: string; page_url: string }[];
     csvRows: Record<string, string>[];
@@ -223,8 +233,11 @@ async function selftest(): Promise<never> {
     let a: { ok: boolean; reason?: string };
     if (dc.kind_check === "bead-project-areas") {
       a = assertBeadProjectAreas(dc.csv, dc.expected_row_count);
+    } else if (dc.kind_check === "page-data") {
+      const r = assertPageData(dc.page, corpusIndex);
+      a = r.ok ? { ok: true } : { ok: false, reason: r.failures[0] };
     } else {
-      a = { ok: false, reason: `unknown data-case kind ${dc.kind_check}` };
+      a = { ok: false, reason: `unknown data-case kind ${(dc as { kind_check: string }).kind_check}` };
     }
     const behaved = dc.kind === "must_pass" ? a.ok : !a.ok;
     const tag = behaved ? "PASS" : "FAIL";
@@ -348,6 +361,33 @@ async function main() {
     } else {
       failures.push(`status ${item.key}`);
       bufLog(`FAIL status ${item.key} reason=${a.reason}`);
+    }
+  }
+
+  // Offline: page-data files (data/pages/*.json). Missing directory or an
+  // empty directory is a hard failure — every workflow page's figures must
+  // live here, so an empty pages directory means the checks have nothing to
+  // verify.
+  const pageFiles = existsSync(PAGES_DIR)
+    ? readdirSync(PAGES_DIR).filter((f) => f.endsWith(".json")).sort()
+    : [];
+  if (pageFiles.length === 0) {
+    failures.push("data pages");
+    bufLog("FAIL data pages: no page files found");
+  } else {
+    for (const fname of pageFiles) {
+      const page = JSON.parse(
+        readFileSync(path.join(PAGES_DIR, fname), "utf8"),
+      ) as PageFile;
+      const a = assertPageData(page, index);
+      const rowCount = page.breakdowns.reduce((n, b) => n + b.rows.length, 0);
+      const counts = `items=${page.items.length} phases=${page.phases.length} rows=${rowCount} who=${page.who.length} evidence=${page.evidence.length}`;
+      if (a.ok) {
+        bufLog(`PASS data pages/${page.page} ${counts}`);
+      } else {
+        failures.push(`pages/${page.page}`);
+        bufLog(`FAIL data pages/${page.page}: ${a.failures[0]}`);
+      }
     }
   }
 

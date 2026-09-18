@@ -1,6 +1,6 @@
 # Three-minute walkthrough
 
-Doc rev 2026-09-16a.
+Doc rev 2026-09-18a.
 
 1. Open the site. Read the header line and the disclaimer. The whole page is built from eleven public documents and two public datasets; the corpus list at the bottom shows each one's hash and fetch time.
 2. Expand the receipt on the "BEAD allocation" tile. The quote is the sentence from Initial Proposal Volume 2, page 105 (PDF page), and the link opens the PDF at that page.
@@ -9,3 +9,4 @@ Doc rev 2026-09-16a.
 5. Ask "Tell me about the BEAD program." A broad question: the answer is grounded, and if the model volunteered a figure it could not cite, a line under the answer says how many figures were withheld.
 6. Scroll to "Where the gaps are". Two series, two vintages, deliberately not combined: FCC's Dec 31, 2025 availability tiers beside the Dec 31, 2024 fabric NTIA approved for BEAD funding.
 7. In a terminal in the repo, run `pnpm eval --selftest`. Line one is `RESULT: pass` because every deliberately broken case went red. Run `pnpm smoke https://bead.forpono.com`: line two prints the deployed and local commit SHAs, and the probes only count if they match.
+8. Open `/challenge`. Read the three sum lines under the breakdown tables: two breakdowns match the stated total of 37,593; the challenge-type breakdown does not — its six published row counts sum to 37,595, and the page says so in amber.
