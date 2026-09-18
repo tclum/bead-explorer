@@ -6,65 +6,48 @@ A live URL showing Hawaiʻi's BEAD program status and unserved/underserved
 picture from public data, answering questions grounded only in loaded public
 documents with per-value provenance, gated by an eval harness.
 
+Workflow pages (Slices 4–8, scoped 2026-09-17): a home screen plus one page
+per workflow the Final Proposal describes, built only from public Hawaiʻi
+documents and datasets, every figure carrying a receipt the eval verifies
+and every page probed by smoke. The home screen stays the demo path.
+
 ## Shipped
 
-- **2026-09-15** — `fcc32cd`: Milestone A scaffold + ingest pipeline (11
-  sources, 581 chunks).
-- **2026-09-15** — `119bfea`: HTML extraction fix; per-source
-  `selector`/`strip` overrides.
-- **2026-09-15** — `1b5ebfe`: Milestone B — retrieval + verification +
-  claim-level number coverage + prompt caching + `--only`.
-- **2026-09-16** — `caf98c8`: Slice 1.1 refusal path hardened (subset-rule
-  retry, figure-free refusals); `pnpm ask` + `pnpm smoke` scripts. Deployed
-  to https://bead-explorer.vercel.app.
-- **2026-09-16** — Slice 1.2 (this commit): sentence-aware chunking,
-  segment-level citation verification with multi-match re-attribution
-  and drop reasons, broad-question fixture f09, `/api/version` +
-  SHA-checked smoke. Retrieval retuned: `k=20`, `PER_DOC_PENALTY=0.35`,
-  pool ×6, and `MAX_TOKENS=2048`. System prompt gained rules 9/10
-  ("answer the question asked; do not enumerate breakdowns"; "at most
-  six citations"). See `docs/findings-provenance.md` for the bullet-list
-  verification lesson (f03 flake root cause and fix).
-- **2026-09-16 decision** — **Withhold, don't refuse.** Sentences whose
-  figures remain uncovered after the retry are pruned from the answer
-  (chunker-style sentence split, canonical whole-token match) instead of
-  flipping the whole answer to a refusal. Refusal only fires when the
-  pruned answer is empty. Withheld figures do not appear in the API
-  response or UI; `withheld_count` is public, `withheld_sentences` is
-  server-only (`--debug` on `pnpm ask` opts in). UI: one-liner under the
-  answer. Eval: per-fixture `withheld=N`. Selftest cases `u`/`v` lock
-  the contract.
-- **2026-09-16** — Slice 2: "Where the gaps are" section between the
-  status panel and the Ask box. Inline SVG county choropleth shaded by
-  the FCC BDC unserved share, two-series table (FCC BDC Dec 2025 beside
-  BEAD Final Proposal Dec 2024 project areas), footnote on definitions,
-  receipts disclosure. New fetch scripts `pnpm fetch:bead` (parses the
-  NTIA-approved `fp_locations_approved.xlsx`, 7,009 rows, into
-  `data/bead-hi-project-areas.csv` with hard gates) and `pnpm fetch:geo`
-  (pulls Hawaiʻi county polygons from Census TIGERweb, drops the
-  Northwestern Hawaiian Islands rings). Shared `formatCount` helper so
-  map, table, and smoke agree byte for byte. Eval offline: two new
-  `PASS data` lines plus selftest case `w` (must fail). Smoke: third
-  probe `GET /` verifies every county's FCC unserved and every project
-  area's BEAD total appear on the page; bumped to `smoke v0.3.0`.
+- **2026-09-15** — `fcc32cd`: Milestone A scaffold + ingest pipeline (11 sources, 581 chunks).
+- **2026-09-15** — `119bfea`: HTML extraction fix; per-source `selector`/`strip` overrides.
+- **2026-09-15** — `1b5ebfe`: Milestone B — retrieval + verification + claim-level number coverage + prompt caching + `--only`.
+- **2026-09-16** — `caf98c8`: Slice 1.1 — refusal path hardened (subset-rule retry,
+  figure-free refusals); `pnpm ask` + `pnpm smoke`. First deploy.
+- **2026-09-16** — `19de3a2`: Slice 1.2 — sentence-aware chunking, segment-level
+  verification, drop reasons, f09, `/api/version` + SHA-checked smoke; `k=20`, pool ×6.
+- **2026-09-16 decision** — **Withhold, don't refuse.** Uncovered sentences after
+  retry are pruned (chunker-style split, canonical whole-token match); refusal only
+  when the pruned answer is empty. Withheld figures stay server-side. Selftest u/v.
+- **2026-09-16** — `fecdcdf`: Slice 2 — county choropleth + two-series table
+  (FCC BDC Dec 2025 beside BEAD FP Dec 2024), `pnpm fetch:bead`/`geo`, smoke probe 3.
+- **2026-09-17** — Slice 3 (this commit): ink palette + Fraunces/JetBrains Mono via
+  `next/font/google` (self-hosted; verified this gate by curl on `fonts.googleapis`,
+  smoke assertion ships with Slice 4); provenance strip, ask elapsed, build-SHA footer.
+- **2026-09-17 decision**: workflow pages are named after Final Proposal sections,
+  never vendor products. Order: `/challenge`, `/selection`, `/oversight`,
+  `/projects`, `/anchors` (conditional). Figures in `data/pages/<page>.json` with
+  eval-checked receipts; pages embed the Ask box and never touch `src/lib/*`.
 
 See `docs/findings-provenance.md` for the durable lessons behind these
 entries (chunker, verification, retry rules, retrieval, cost).
 
 ## Do
 
-- **Between gates, tune with `pnpm eval --only <id>[,<id>...]`.** The full
-  10+-fixture suite runs only at a gate. A gate is three consecutive full
-  runs, about $0.30 with caching. Rationale in
+- **Between gates, tune with `pnpm eval --only <id>[,<id>...]`.** The full suite
+  runs only at a gate (three consecutive full runs, ~$0.30 with caching); see
   `docs/findings-provenance.md` (cost lesson).
 
 ## Deploy
 
-- **Vercel project `bead-explorer`, team `tclum-4994s-projects`,
-  git-connected**: push to `main` deploys production, other branches
-  preview. Verification: `pnpm smoke https://bead-explorer.vercel.app`
-  first checks that the deployed SHA matches local HEAD before running
-  probes.
+- **Canonical URL**: <https://bead.forpono.com> (alias: `bead-explorer.vercel.app`).
+- **Vercel project `bead-explorer`, team `tclum-4994s-projects`, git-connected**:
+  push to `main` deploys production, other branches preview. Verify with
+  `pnpm smoke https://bead.forpono.com` (SHA-checked before probes run).
 
 ## Do not touch
 
@@ -72,43 +55,54 @@ entries (chunker, verification, retry rules, retrieval, cost).
 
 ## Open questions
 
-- **2026-09-16 research**: would numbered passage labels (`[1]..[12]`)
-  reduce mis-labeled citations? Two of three citations on the deployed
-  challenge question were re-attributed. Measure re-attributed counts
-  over three eval runs with each labeling before changing anything.
-- **2026-09-16 research**: retrieval quality for short or broad queries;
-  f09 is the probe.
-- **2026-09-16 task**: upgrade Node on MacBook-Pro-437 from 20.11.1 to 22
-  LTS between slices; Vercel CLI dependencies warn on 20.11.
+- **2026-09-16 research**: would numbered passage labels (`[1]..[12]`) reduce
+  mis-labeled citations? Two of three citations on the deployed challenge question
+  were re-attributed. Measure over three eval runs with each labeling.
+- **2026-09-16 research**: retrieval quality for short or broad queries; f09 is the probe.
+- **2026-09-17 research**: columns, row counts, and gate values for the four
+  approved Final Proposal spreadsheets not yet fetched (`fp_subgrantees_approved.xlsx`,
+  `fp_deployment_projects_approved.xlsx`, `fp_no_BEAD_locations_approved.xlsx`,
+  `fp_cai_approved.xlsx`, linked from the UHBO Final Proposal page). Resolve in each
+  fetch script's recon step: print headers and counts, then set gates from them.
+- **2026-09-17 research**: does the challenge-results zip ("CSV files" on the
+  results page) carry per-challenge records with county or location id? If so,
+  a county breakdown of challenges is possible.
+- **2026-09-17 research**: owner, access, and terms of the AGOL layer
+  `fp_locations_approved` (lat/lon per funded location) before any per-location map.
+- **2026-09-17 research**: vintage and columns of the 2024 CAI list v3
+  (UHBO Initial Proposal page) versus `fp_cai_approved.xlsx`.
 
 ## Not yet specified
 
 - Any per-source override for `uhbo-challenge` if the FAQ-heavy content
   competes with the answer chunk on other queries.
 - Whether to embed a small MMR/BM25 tuning report in the UI.
+- Workflow pages: home-screen navigation placement; per-page Ask chips and
+  fixtures per page; report export form (print vs. Markdown); the scoring
+  calculator's input bounds and "computed, not quoted" labeling.
 
 ## Accepted gaps
 
-- FCC statewide/county rows come from the Esri Living Atlas republication of
-  the FCC BDC data rather than a direct FCC download. Task: swap when a
-  direct FCC file is in hand.
-- NTIA's Final Proposal Overview counts **7,033** locations while the
-  approved location files hold **7,009** unserved/underserved rows plus **23**
-  CAI rows. The tile shows 7,033 with the NTIA receipt.
+- FCC statewide/county rows come from the Esri Living Atlas republication of the
+  FCC BDC data, not a direct FCC download. Task: swap when a direct FCC file is in hand.
+- NTIA's Final Proposal Overview counts **7,033** locations while the approved files
+  hold **7,009** unserved/underserved rows plus **23** CAI rows. The tile shows 7,033.
 - The Challenge Process Guide's page 42 (version-history table) is excluded
   from the corpus via `page_range: [1, 41]`.
-- Claim coverage is numeric only. Names and dates rendered as prose (e.g.,
-  "the Final Proposal", "August 2024") are not claim-checked; only the digit
-  runs a claim contains are checked against the citation quotes.
-- Refusal explanations are model text checked only for figures, not for
-  claims. A figure-free reason is passed through as-is; a reason with
-  digits is replaced by a fixed generic sentence.
-- The BEAD project-areas series counts approved-funded locations by
-  project area (7,009 total) and is not a served/unserved measure of the
-  whole county. It cannot be added or subtracted against the FCC BDC
-  BSL tiers, which use a different location fabric.
+- Claim coverage is numeric only. Names and dates rendered as prose (e.g., "the
+  Final Proposal", "August 2024") are not claim-checked; only the digit runs are.
+- Refusal explanations are model text checked only for figures, not claims. A
+  figure-free reason passes through; a reason with digits is replaced by a fixed sentence.
+- The BEAD project-areas series counts approved-funded locations by project area
+  (7,009 total), not a served/unserved measure of the whole county. It cannot be added
+  or subtracted against the FCC BDC BSL tiers, which use a different location fabric.
 
 ## Out of scope
 
 - Auth, databases, multi-state expansion, CI wiring, scraping, or cloning any
   vendor product.
+- Naming, modeling, or describing pages after any vendor's products; pages
+  use the Final Proposal's own section names.
+- A page for edge or field hardware: no public-data analog.
+- Documents outside the BEAD corpus (for example the state Digital Equity
+  Plan) until a page needs one and the Destination is redrawn.

@@ -34,9 +34,9 @@ function Receipt({ item, manifest, csvRows }: { item: StatusItem; manifest: Mani
     const src = item.source;
     const row = csvRows.find((r) => Object.entries(src.row).every(([k, v]) => r[k] === v));
     return (
-      <details className="mt-2 text-xs text-zinc-400">
-        <summary className="cursor-pointer select-none hover:text-zinc-200">Receipt</summary>
-        <div className="mono mt-1 whitespace-pre-wrap break-words rounded border border-zinc-800 bg-zinc-900 p-2">
+      <details className="mt-3 text-xs text-paper-3">
+        <summary className="cursor-pointer select-none hover:text-paper-2">Receipt</summary>
+        <div className="mt-2 whitespace-pre-wrap break-words rounded border-l-2 border-teal bg-ink-950 px-3 py-2 font-mono text-paper-2">
           {src.csv}
           {"\n"}row: {JSON.stringify(src.row)}
           {"\n"}columns: {Object.entries(src.columns)
@@ -50,20 +50,25 @@ function Receipt({ item, manifest, csvRows }: { item: StatusItem; manifest: Mani
             </>
           ) : null}
         </div>
-        {src.note ? <div className="mt-1">{src.note}</div> : null}
+        {src.note ? <div className="mt-2 text-paper-3">{src.note}</div> : null}
       </details>
     );
   }
   const src = item.source;
   const link = pageUrlFor(manifest, src.doc, src.page);
   return (
-    <details className="mt-2 text-xs text-zinc-400">
-      <summary className="cursor-pointer select-none hover:text-zinc-200">Receipt</summary>
-      <div className="mono mt-1 whitespace-pre-wrap break-words rounded border border-zinc-800 bg-zinc-900 p-2">
+    <details className="mt-3 text-xs text-paper-3">
+      <summary className="cursor-pointer select-none hover:text-paper-2">Receipt</summary>
+      <div className="mt-2 whitespace-pre-wrap break-words rounded border-l-2 border-teal bg-ink-950 px-3 py-2 font-mono text-paper">
         “{src.quote}”
       </div>
       {link ? (
-        <a className="mt-1 inline-block text-sky-400 hover:text-sky-300" href={link.url} target="_blank" rel="noopener noreferrer">
+        <a
+          className="mt-2 inline-block font-mono text-teal hover:underline"
+          href={link.url}
+          target="_blank"
+          rel="noopener noreferrer"
+        >
           {link.short}, p.{src.page}
         </a>
       ) : null}
@@ -77,16 +82,27 @@ export default function StatusPanel() {
   const csvText = readFileSync(path.join(process.cwd(), "data", "fcc-hi-summary.csv"), "utf8");
   const csvRows = parseCsv(csvText);
   return (
-    <section aria-labelledby="status-title" className="w-full">
-      <h2 id="status-title" className="mb-3 text-lg font-semibold text-zinc-200">
+    <section aria-labelledby="status-title">
+      <h2 id="status-title" className="mb-6 font-serif text-2xl font-medium text-paper">
         Program status
       </h2>
-      <div className="grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-3">
+      <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-4">
         {status.items.map((item) => (
-          <div key={item.key} className="rounded border border-zinc-800 bg-zinc-900/60 p-4">
-            <div className="text-xs uppercase tracking-wide text-zinc-500">{item.label}</div>
-            <div className="mt-1 text-xl font-semibold text-zinc-50">{item.value}</div>
-            {item.detail ? <div className="mt-1 text-sm text-zinc-400">{item.detail}</div> : null}
+          <div
+            key={item.key}
+            className="flex flex-col rounded border border-ink-800 bg-ink-900 p-5"
+          >
+            <div className="text-xs uppercase tracking-wide text-paper-3">
+              {item.label}
+            </div>
+            <div className="mt-2 font-serif text-2xl font-semibold leading-tight text-paper">
+              {item.value}
+            </div>
+            {item.detail ? (
+              <div className="mt-2 text-sm leading-relaxed text-paper-2">
+                {item.detail}
+              </div>
+            ) : null}
             <Receipt item={item} manifest={manifest} csvRows={csvRows} />
           </div>
         ))}

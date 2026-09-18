@@ -12,17 +12,19 @@ const VIEW_H = 500;
 const PAD_X = 44;
 const PAD_Y = 34;
 
-type LegendStop = { max: number; label: string; fill: string };
+type LegendStop = { max: number; label: string; tokenIndex: 1 | 2 | 3 | 4 | 5 };
 
-// Sequential single-hue amber scale, dark → bright, legible on the
-// zinc-950 page background. Steps are share-of-BSLs cutoffs.
 const LEGEND: LegendStop[] = [
-  { max: 0.01, label: "< 1%", fill: "#78350f" },
-  { max: 0.02, label: "1–2%", fill: "#b45309" },
-  { max: 0.04, label: "2–4%", fill: "#d97706" },
-  { max: 0.06, label: "4–6%", fill: "#f59e0b" },
-  { max: Number.POSITIVE_INFINITY, label: "≥ 6%", fill: "#fbbf24" },
+  { max: 0.01, label: "< 1%", tokenIndex: 1 },
+  { max: 0.02, label: "1–2%", tokenIndex: 2 },
+  { max: 0.04, label: "2–4%", tokenIndex: 3 },
+  { max: 0.06, label: "4–6%", tokenIndex: 4 },
+  { max: Number.POSITIVE_INFINITY, label: "≥ 6%", tokenIndex: 5 },
 ];
+
+function tokenFill(index: 1 | 2 | 3 | 4 | 5): string {
+  return `var(--color-map-${index})`;
+}
 
 function bucketFor(share: number): LegendStop {
   for (const stop of LEGEND) {
@@ -160,8 +162,15 @@ export default function GapMap() {
     .map((r) => `${r.label} ${(r.share * 100).toFixed(1)}%`)
     .join(", ")}. See the table for exact counts.`;
 
+  const labelHalo = {
+    paintOrder: "stroke" as const,
+    stroke: "var(--color-ink-950)",
+    strokeWidth: 3,
+    strokeLinejoin: "round" as const,
+  };
+
   return (
-    <div className="rounded border border-zinc-800 bg-zinc-900/60 p-4">
+    <div className="rounded border border-ink-800 bg-ink-900 p-4">
       <svg
         xmlns="http://www.w3.org/2000/svg"
         viewBox={`0 0 ${VIEW_W} ${VIEW_H}`}
@@ -170,13 +179,13 @@ export default function GapMap() {
         className="h-auto w-full"
       >
         <title>Hawaiʻi counties shaded by FCC BDC unserved share</title>
-        <rect x="0" y="0" width={VIEW_W} height={VIEW_H} fill="#09090b" />
+        <rect x="0" y="0" width={VIEW_W} height={VIEW_H} style={{ fill: "var(--color-ink-950)" }} />
         {rendered.map((r) => (
           <path
             key={r.geoid}
             d={pathFor(r.feature)}
-            fill={r.stop.fill}
-            stroke="#27272a"
+            style={{ fill: tokenFill(r.stop.tokenIndex) }}
+            stroke="var(--color-ink-800)"
             strokeWidth={0.75}
             strokeLinejoin="round"
           />
@@ -193,7 +202,7 @@ export default function GapMap() {
                   y1={r.cy}
                   x2={tx - 6}
                   y2={ty + 4}
-                  stroke="#fafafa"
+                  stroke="var(--color-paper)"
                   strokeWidth={0.75}
                 />
               ) : null}
@@ -201,15 +210,9 @@ export default function GapMap() {
                 x={tx}
                 y={ty}
                 textAnchor={isKalawao ? "start" : "middle"}
-                style={{
-                  paintOrder: "stroke",
-                  stroke: "#0a0a0a",
-                  strokeWidth: 3,
-                  strokeLinejoin: "round",
-                }}
-                fill="#fafafa"
+                style={{ ...labelHalo, fill: "var(--color-paper)" }}
                 fontSize={14}
-                fontFamily="system-ui, -apple-system, Segoe UI, sans-serif"
+                fontFamily="var(--font-sans)"
                 fontWeight={600}
               >
                 {r.label}
@@ -218,15 +221,9 @@ export default function GapMap() {
                 x={tx}
                 y={ty + 15}
                 textAnchor={isKalawao ? "start" : "middle"}
-                style={{
-                  paintOrder: "stroke",
-                  stroke: "#0a0a0a",
-                  strokeWidth: 3,
-                  strokeLinejoin: "round",
-                }}
-                fill="#e4e4e7"
+                style={{ ...labelHalo, fill: "var(--color-paper-2)" }}
                 fontSize={12}
-                fontFamily="system-ui, -apple-system, Segoe UI, sans-serif"
+                fontFamily="var(--font-sans)"
               >
                 {formatCount(r.row.unserved)} unserved
               </text>
@@ -237,9 +234,9 @@ export default function GapMap() {
           <text
             x={legendX}
             y={legendY - 8}
-            fill="#a1a1aa"
+            style={{ fill: "var(--color-paper-3)" }}
             fontSize={11}
-            fontFamily="system-ui, -apple-system, Segoe UI, sans-serif"
+            fontFamily="var(--font-sans)"
           >
             FCC unserved share (of BSLs)
           </text>
@@ -247,13 +244,19 @@ export default function GapMap() {
             const y = legendY + i * legendGapY;
             return (
               <g key={stop.label}>
-                <rect x={legendX} y={y} width={legendSwatchW} height={legendSwatchH} fill={stop.fill} />
+                <rect
+                  x={legendX}
+                  y={y}
+                  width={legendSwatchW}
+                  height={legendSwatchH}
+                  style={{ fill: tokenFill(stop.tokenIndex) }}
+                />
                 <text
                   x={legendX + legendSwatchW + 6}
                   y={y + legendSwatchH - 3}
-                  fill="#e4e4e7"
+                  style={{ fill: "var(--color-paper-2)" }}
                   fontSize={11}
-                  fontFamily="system-ui, -apple-system, Segoe UI, sans-serif"
+                  fontFamily="var(--font-sans)"
                 >
                   {stop.label}
                 </text>

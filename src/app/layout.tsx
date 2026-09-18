@@ -1,7 +1,21 @@
 import type { Metadata } from "next";
+import { Fraunces, JetBrains_Mono } from "next/font/google";
 import "./globals.css";
 
 const BUILD_SHA = process.env.VERCEL_GIT_COMMIT_SHA ?? process.env.GIT_SHA ?? "dev";
+
+const fraunces = Fraunces({
+  subsets: ["latin", "latin-ext"],
+  display: "swap",
+  variable: "--font-fraunces",
+  axes: ["opsz"],
+});
+
+const jetbrains = JetBrains_Mono({
+  subsets: ["latin", "latin-ext"],
+  display: "swap",
+  variable: "--font-jetbrains",
+});
 
 export const metadata: Metadata = {
   title: "Hawaiʻi BEAD Explorer",
@@ -15,11 +29,11 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en">
+    <html lang="en" className={`${fraunces.variable} ${jetbrains.variable}`}>
       <head>
         <meta name="build-stamp" content={BUILD_SHA} />
       </head>
-      <body className="bg-zinc-950 text-zinc-100 antialiased">{children}</body>
+      <body className="bg-ink-950 text-paper antialiased">{children}</body>
     </html>
   );
 }

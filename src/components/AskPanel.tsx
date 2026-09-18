@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import type { GroundedResult } from "@/lib/types";
 import Receipts from "./Receipts";
 
@@ -16,6 +16,23 @@ export default function AskPanel() {
   const [result, setResult] = useState<GroundedResult | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState<boolean>(false);
+  const [elapsedMs, setElapsedMs] = useState<number>(0);
+  const startRef = useRef<number | null>(null);
+
+  useEffect(() => {
+    if (!loading) return;
+    startRef.current = performance.now();
+    setElapsedMs(0);
+    const id = window.setInterval(() => {
+      if (startRef.current !== null) {
+        setElapsedMs(performance.now() - startRef.current);
+      }
+    }, 100);
+    return () => {
+      window.clearInterval(id);
+      startRef.current = null;
+    };
+  }, [loading]);
 
   async function submit(q: string) {
     const trimmed = q.trim();
@@ -47,40 +64,51 @@ export default function AskPanel() {
   }
 
   function applyChip(q: string) {
+    if (loading) return;
     setQuestion(q);
     submit(q);
   }
 
+  const elapsedS = (elapsedMs / 1000).toFixed(1);
+
   return (
-    <section aria-labelledby="ask-title" className="w-full">
-      <h2 id="ask-title" className="mb-3 text-lg font-semibold text-zinc-200">
+    <section aria-labelledby="ask-title">
+      <h2 id="ask-title" className="mb-6 font-serif text-2xl font-medium text-paper">
         Ask
       </h2>
-      <div className="rounded border border-zinc-800 bg-zinc-900/60 p-4">
+      <div className="rounded border border-ink-800 bg-ink-900 p-5">
+        <label htmlFor="ask-input" className="sr-only">
+          Ask a question about Hawaiʻi&apos;s BEAD program
+        </label>
         <textarea
-          className="mono w-full resize-y rounded border border-zinc-800 bg-zinc-950 p-2 text-sm text-zinc-100 outline-none focus:border-zinc-600"
+          id="ask-input"
+          className="w-full resize-y rounded border border-ink-800 bg-ink-950 p-3 font-mono text-sm text-paper outline-none placeholder:text-paper-3 focus:border-teal"
           rows={3}
           maxLength={300}
           placeholder="Ask a plain-language question about Hawaiʻi's BEAD program."
           value={question}
           onChange={(e) => setQuestion(e.target.value)}
+          disabled={loading}
         />
-        <div className="mt-2 flex flex-wrap items-center gap-2">
+        <div className="mt-3 flex flex-wrap items-center gap-3">
           <button
             type="button"
-            className="rounded border border-zinc-700 bg-zinc-800 px-3 py-1 text-sm text-zinc-100 hover:bg-zinc-700 disabled:opacity-50"
+            className="rounded border border-ink-700 bg-ink-800 px-4 py-1.5 text-sm text-paper hover:bg-ink-700 disabled:cursor-not-allowed disabled:opacity-50"
             disabled={loading}
             onClick={() => submit(question)}
+            aria-busy={loading}
           >
             {loading ? "Asking…" : "Ask"}
           </button>
-          <span className="text-xs text-zinc-500">{question.trim().length}/300</span>
-          <div className="flex flex-wrap gap-2 md:ml-4">
+          <span className="font-mono text-xs text-paper-3">
+            {question.trim().length}/300
+          </span>
+          <div className="flex flex-wrap gap-2 md:ml-2">
             {CHIPS.map((c) => (
               <button
                 key={c.id}
                 type="button"
-                className="rounded-full border border-zinc-700 bg-zinc-900 px-3 py-1 text-xs text-zinc-300 hover:bg-zinc-800"
+                className="rounded-full border border-ink-700 bg-ink-900 px-3 py-1 text-xs text-paper-2 hover:bg-ink-800 disabled:cursor-not-allowed disabled:opacity-50"
                 onClick={() => applyChip(c.question)}
                 disabled={loading}
                 title={c.question}
@@ -90,7 +118,20 @@ export default function AskPanel() {
             ))}
           </div>
         </div>
-        {error ? <p className="mt-3 text-sm text-rose-400">{error}</p> : null}
+        {loading ? (
+          <div
+            className="mt-4 font-mono text-sm text-amber"
+            aria-live="polite"
+            role="status"
+          >
+            Checking receipts… {elapsedS} s
+          </div>
+        ) : null}
+        {error ? (
+          <p className="mt-4 text-sm text-rose" role="alert">
+            {error}
+          </p>
+        ) : null}
         {result ? <AnswerCard result={result} /> : null}
       </div>
     </section>
@@ -98,13 +139,19 @@ export default function AskPanel() {
 }
 
 function AnswerCard({ result }: { result: GroundedResult }) {
+  const latencyS = (result.latency_ms / 1000).toFixed(2);
   if (result.refused) {
     return (
-      <div className="mt-4 rounded border border-amber-700/60 bg-amber-950/40 p-3 text-sm text-amber-200">
-        <div className="font-semibold">Refused</div>
-        <div className="mt-1">{result.refusal_reason ?? "The corpus does not answer this question."}</div>
-        <div className="mt-1 text-xs text-amber-300/80">
+      <div className="mt-4 rounded border border-rose bg-ink-900 p-4">
+        <div className="text-xs uppercase tracking-wide text-rose">Refused</div>
+        <div className="mt-2 text-sm text-paper">
+          {result.refusal_reason ?? "The corpus does not answer this question."}
+        </div>
+        <div className="mt-1 text-xs text-paper-3">
           Try a more specific question, or one of the examples above.
+        </div>
+        <div className="mt-3 font-mono text-xs text-paper-3">
+          {result.model} · {latencyS} s
         </div>
         <DroppedList result={result} />
         <RetrievedList result={result} />
@@ -112,19 +159,24 @@ function AnswerCard({ result }: { result: GroundedResult }) {
     );
   }
   return (
-    <div className="mt-4 rounded border border-zinc-700/70 bg-zinc-950 p-3">
-      <p className="whitespace-pre-wrap text-sm leading-relaxed text-zinc-100">{result.answer}</p>
+    <div className="mt-4 rounded border border-ink-800 bg-ink-950 p-4">
+      <p className="whitespace-pre-wrap text-sm leading-relaxed text-paper">
+        {result.answer}
+      </p>
       {(result.withheld_count ?? 0) > 0 ? (
-        <div className="mt-2 text-xs text-amber-400/80">
+        <div className="mt-3 text-xs text-amber">
           {result.withheld_count} figure(s) withheld: no verified receipt.
         </div>
       ) : null}
       <Receipts citations={result.citations} />
       {result.retried ? (
-        <div className="mt-2 text-xs text-amber-400/80">
+        <div className="mt-3 text-xs text-amber">
           Answer required one retry: initial figures lacked a verified citation.
         </div>
       ) : null}
+      <div className="mt-3 font-mono text-xs text-paper-3">
+        {result.model} · {latencyS} s
+      </div>
       <DroppedList result={result} />
       <RetrievedList result={result} />
     </div>
@@ -139,11 +191,11 @@ function DroppedList({ result }: { result: GroundedResult }) {
   // the same mask; this is defense-in-depth.
   const mask = (s: string) => s.slice(0, 80).replace(/\d/g, "#");
   return (
-    <details className="mt-3 text-xs text-zinc-400">
-      <summary className="cursor-pointer select-none hover:text-zinc-200">
+    <details className="mt-3 text-xs text-paper-3">
+      <summary className="cursor-pointer select-none hover:text-paper-2">
         Dropped citations ({dropped.length})
       </summary>
-      <ul className="mono mt-1 space-y-1 rounded border border-zinc-800 bg-zinc-900 p-2">
+      <ul className="mt-2 space-y-1 rounded border border-ink-800 bg-ink-950 p-2 font-mono">
         {dropped.map((d, i) => (
           <li key={`${d.passage_id}-${i}`}>
             {d.reason} — {JSON.stringify(mask(d.quote))}
@@ -156,11 +208,11 @@ function DroppedList({ result }: { result: GroundedResult }) {
 
 function RetrievedList({ result }: { result: GroundedResult }) {
   return (
-    <details className="mt-3 text-xs text-zinc-400">
-      <summary className="cursor-pointer select-none hover:text-zinc-200">
+    <details className="mt-3 text-xs text-paper-3">
+      <summary className="cursor-pointer select-none hover:text-paper-2">
         Retrieved passages (k={result.retrieved.length})
       </summary>
-      <ul className="mono mt-1 space-y-1 rounded border border-zinc-800 bg-zinc-900 p-2">
+      <ul className="mt-2 space-y-1 rounded border border-ink-800 bg-ink-950 p-2 font-mono">
         {result.retrieved.map((r) => (
           <li key={r.id}>
             {r.id} — {r.doc} p.{r.page} score={r.score.toFixed(2)}

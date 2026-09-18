@@ -1,17 +1,53 @@
 @import "tailwindcss";
 
+@theme {
+  --color-ink-950: #0b0d10;
+  --color-ink-900: #12161b;
+  --color-ink-800: #1c2229;
+  --color-ink-700: #2a323b;
+  --color-paper: #f2ede3;
+  --color-paper-2: #b9b2a5;
+  --color-paper-3: #8f8a80;
+  --color-teal: #7fd1b9;
+  --color-amber: #e7a95b;
+  --color-rose: #f07a7a;
+  --color-map-1: #2b2114;
+  --color-map-2: #5a3f1a;
+  --color-map-3: #8f6320;
+  --color-map-4: #c4892a;
+  --color-map-5: #ecb04a;
+
+  --font-sans: -apple-system, BlinkMacSystemFont, "Segoe UI", Inter, Helvetica,
+    Arial, sans-serif;
+  --font-serif: var(--font-fraunces), ui-serif, Georgia, "Times New Roman", serif;
+  --font-mono: var(--font-jetbrains), ui-monospace, SFMono-Regular, "SF Mono",
+    Menlo, Consolas, "Liberation Mono", monospace;
+}
+
 html,
 body {
-  background-color: #09090b; /* zinc-950 */
-  color: #f4f4f5; /* zinc-100 */
+  background-color: var(--color-ink-950);
+  color: var(--color-paper);
 }
 
 body {
-  font-family: system-ui, -apple-system, "Segoe UI", "Helvetica Neue", Arial,
-    sans-serif;
+  font-family: var(--font-sans);
+  font-feature-settings: "ss01";
 }
 
-.mono {
-  font-family: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas,
-    "Liberation Mono", monospace;
+:focus-visible {
+  outline: 2px solid var(--color-teal);
+  outline-offset: 2px;
+  border-radius: 2px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
 }

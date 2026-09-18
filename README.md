@@ -44,6 +44,25 @@ The two series use different location fabrics and definitions (FCC
 serviceable-location tiers vs. NTIA's approved BEAD-eligible list after
 the challenge process); their counts are not additive across series.
 
+## Architecture
+
+```mermaid
+flowchart TD
+  q[Question] --> r["BM25 retrieval — k=20,<br/>per-document diversity"]
+  r --> m["Claude with forced<br/>grounded_answer tool"]
+  m --> v["Citation verification —<br/>re-attribution, segment trim"]
+  v --> n[Number coverage check]
+  n -->|figures missing| retry["One retry — model may drop<br/>uncitable figures, no new ones"]
+  retry --> v2[Merge citations, re-verify]
+  v2 --> h[Withhold sentences whose figures<br/>still lack a receipt]
+  n -->|all covered| h
+  h -->|answer non-empty| ui[Answer with receipts]
+  h -->|answer empty| refuse["Refuse — no figures,<br/>no citations"]
+```
+
+Retrieval, verification, retry, withhold, and the receipts UI are laid out
+step by step in the section below.
+
 ## How provenance is enforced
 
 **Retrieval** is BM25 (via `minisearch`) over per-page chunks, with
@@ -129,6 +148,38 @@ Normalization (`src/lib/normalize.ts`) is used everywhere text is compared:
 NFKD, drop combining marks, drop `ʻ ' ’ ‘ ` ´`, map en/em dashes to `-`, map
 curly double quotes to `"`, lowercase, collapse whitespace.
 
+## What this proves, and what it doesn't
+
+**Proves:**
+
+- Every figure the UI shows has a verbatim receipt at a page — the number
+  appears as a whole token inside a verified quote, and the quote appears
+  in the retrieved chunk it cites.
+- Refusals carry no figures and no citations: whenever the final result is
+  refused, `answer` and `citations` are emptied and any digit in the
+  model's stated reason is replaced by a fixed generic sentence.
+- The checks can fail: `pnpm eval --selftest` runs a fixture set where
+  every case is deliberately broken and asserts each assertion goes red,
+  so a `RESULT: pass` from the selftest means the assertions are wired
+  to fire.
+
+**Does not prove:**
+
+- The answer is complete. Withheld sentences are counted, not shown; the
+  model may also have omitted the fact the reader wanted.
+- Prose claims without figures are true. Number coverage is numeric only:
+  names, dates rendered as prose, and qualitative claims are not
+  checked against the quotes.
+- Retrieval found the best passage. BM25 returns k=20 passages weighted
+  by per-document diversity; a better passage may exist outside that
+  window, in which case the model may refuse or cite a weaker one.
+
+For a three-minute click-through of the site and the checks, see
+[`docs/walkthrough.md`](docs/walkthrough.md). For the durable engineering
+lessons behind the pipeline (chunker, verification, retry rules,
+retrieval, cost), see
+[`docs/findings-provenance.md`](docs/findings-provenance.md).
+
 ## Data sources
 
 Every document is committed under `data/raw/` for reproducibility. The
@@ -173,13 +224,15 @@ pnpm smoke <base-url>                 # POST two probe questions to a deployed r
 
 ## Deploy
 
+Canonical URL: <https://bead.forpono.com> (alias: `bead-explorer.vercel.app`).
+
 Deploys to Vercel via git connection: pushing to `main` deploys production;
 pushing to any other branch produces a preview. The Vercel project is
 `bead-explorer` under team `tclum-4994s-projects`. `npx vercel --prod` is
 not needed. After a push, verify the deployed route with:
 
 ```bash
-pnpm smoke https://bead-explorer.vercel.app
+pnpm smoke https://bead.forpono.com
 ```
 
 `pnpm smoke` first calls `GET /api/version` on the deployed base URL and
