@@ -13,6 +13,8 @@
     { "id": "f09", "question": "Tell me about Hawaiʻi's BEAD program.", "expect": { "refuse": false, "cite": [["fp", 4], ["ipv1", 3], ["ipv2", 3], ["ipv2", 105], ["ntia-fp-overview", 1], ["ltgov-pr-2025-12-23", 1], ["uh-news-2026-08-04", 1]], "answer_contains": [["149"]] } },
     { "id": "f10", "question": "What kinds of challenges were filed in Hawaiʻi's BEAD challenge process, and how many of each?", "expect": { "refuse": false, "cite": [["uhbo-challenge", 1]], "answer_contains": [["9,812", "15,057", "12,719"]] } },
     { "id": "f11", "question": "What evidence is required for an availability challenge in Hawaiʻi's BEAD challenge process?", "expect": { "refuse": false, "cite": [["cpg", 19], ["cpg", 18], ["cpg", 20]], "answer_contains": [["evidence"]] } },
+    { "id": "f12", "question": "What scoring criteria did Hawaiʻi use to select BEAD deployment subgrantees, and how many points was each criterion worth?", "expect": { "refuse": false, "cite": [["fp", 25], ["fp", 28]], "answer_contains": [["200"], ["30"], ["15", "45"]] } },
+    { "id": "f13", "question": "How is the Speed to Deployment score calculated in Hawaiʻi's BEAD subgrantee scoring?", "expect": { "refuse": false, "cite": [["fp", 26], ["fp", 29], ["ipv2", 33]], "answer_contains": [["48"], ["30"]] } },
     { "id": "r01", "question": "What is Texas's BEAD allocation?", "expect": { "refuse": true } },
     { "id": "r02", "question": "How many locations has Hawaiian Telcom connected with BEAD funds so far?", "expect": { "refuse": true } }
   ]

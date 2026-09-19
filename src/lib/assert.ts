@@ -248,6 +248,22 @@ export function assertPageData(
         `breakdowns[${b.key}] rows sum to ${sum}, expected ${b.sum_expected}`,
       );
     }
+    if (b.total_key !== undefined) {
+      const item = page.items.find((it) => it.key === b.total_key);
+      if (!item) {
+        failures.push(
+          `breakdowns[${b.key}] total_key=${JSON.stringify(b.total_key)} names no item`,
+        );
+      } else if (typeof item.value !== "number") {
+        failures.push(
+          `breakdowns[${b.key}] total_key=${JSON.stringify(b.total_key)} item value is not numeric`,
+        );
+      } else if (item.value !== b.sum_expected && b.note === undefined) {
+        failures.push(
+          `breakdowns[${b.key}] total_key=${b.total_key} item value ${item.value} != sum_expected ${b.sum_expected} and no note explains the difference`,
+        );
+      }
+    }
   }
   for (const w of page.who) {
     const r = assertQuoteInCorpus(w.source, index);
@@ -256,6 +272,12 @@ export function assertPageData(
   for (const e of page.evidence) {
     const r = assertQuoteInCorpus(e.source, index);
     if (!r.ok) failures.push(`evidence[${e.type}] ${r.reason}`);
+  }
+  if (page.calculator) {
+    for (const exp of page.calculator.expected) {
+      const r = assertQuoteInCorpus(exp.source, index);
+      if (!r.ok) failures.push(`calculator.expected[${exp.id}] ${r.reason}`);
+    }
   }
   return { ok: failures.length === 0, failures };
 }

@@ -2,7 +2,7 @@ import { renderToStaticMarkup } from "react-dom/server";
 import { describe, it, expect } from "vitest";
 import SiteHeader from "./SiteHeader";
 
-const ALLOWED_HREFS = new Set(["/", "/challenge"]);
+const ALLOWED_HREFS = new Set(["/", "/challenge", "/selection"]);
 
 function collectHrefs(html: string): string[] {
   const hrefs: string[] = [];
@@ -13,11 +13,11 @@ function collectHrefs(html: string): string[] {
 }
 
 describe("SiteHeader", () => {
-  it("links to both / and /challenge and nothing else", () => {
+  it("links to /, /challenge, and /selection, and nothing else", () => {
     const html = renderToStaticMarkup(<SiteHeader current="/" />);
     const hrefs = collectHrefs(html);
-    expect(hrefs).toContain("/");
-    expect(hrefs).toContain("/challenge");
+    const unique = new Set(hrefs);
+    expect(unique).toEqual(ALLOWED_HREFS);
     for (const h of hrefs) {
       expect(ALLOWED_HREFS.has(h)).toBe(true);
     }

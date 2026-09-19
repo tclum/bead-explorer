@@ -21,14 +21,14 @@
       "source": { "doc": "fp", "page": 16, "quote": "Final Determination Phase: November 7, 2024 – December 7, 2024 (30 days)" } }
   ],
   "breakdowns": [
-    { "key": "challenger_type", "title": "Challenges received by challenger type", "sum_expected": 37593,
+    { "key": "challenger_type", "title": "Challenges received by challenger type", "sum_expected": 37593, "total_key": "total",
       "rows": [
         { "label": "Eligible Entity", "value": 24606, "source": { "doc": "uhbo-challenge", "page": 1, "quote": "Eligible Entity – 24,606" } },
         { "label": "Local government", "value": 180, "source": { "doc": "uhbo-challenge", "page": 1, "quote": "Local Government Challenges Received – 180" } },
         { "label": "Nonprofit", "value": 88, "source": { "doc": "uhbo-challenge", "page": 1, "quote": "Nonprofit Challenges Received – 88" } },
         { "label": "Service provider", "value": 12719, "source": { "doc": "uhbo-challenge", "page": 1, "quote": "Service Provider Challenges Received – 12,719" } }
       ] },
-    { "key": "challenge_type", "title": "Challenges received by challenge type", "sum_expected": 37595,
+    { "key": "challenge_type", "title": "Challenges received by challenge type", "sum_expected": 37595, "total_key": "total",
       "note": "The six published type counts sum to 37,595; the page's stated total is 37,593. The source does not explain the difference.",
       "rows": [
         { "label": "Availability (A)", "value": 9812, "source": { "doc": "uhbo-challenge", "page": 1, "quote": "Availability (A) – 9,812" } },
@@ -38,7 +38,7 @@
         { "label": "Speed (S)", "value": 3, "source": { "doc": "uhbo-challenge", "page": 1, "quote": "Speed (S) – 3" } },
         { "label": "Location is a CAI (C)", "value": 2, "source": { "doc": "uhbo-challenge", "page": 1, "quote": "Location is a CAI (C) – 2" } }
       ] },
-    { "key": "disposition", "title": "Challenges resolved by disposition", "sum_expected": 37593,
+    { "key": "disposition", "title": "Challenges resolved by disposition", "sum_expected": 37593, "total_key": "total",
       "rows": [
         { "label": "Sustained (S)", "value": 312, "source": { "doc": "uhbo-challenge", "page": 1, "quote": "Sustained (S) – 312" } },
         { "label": "Rejected (R)", "value": 9408, "source": { "doc": "uhbo-challenge", "page": 1, "quote": "Rejected (R) – 9,408" } },

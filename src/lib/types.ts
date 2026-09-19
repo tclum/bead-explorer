@@ -139,10 +139,33 @@ export type PageBreakdown = {
   title: string;
   sum_expected: number;
   note?: string;
+  total_key?: string;
   rows: PageBreakdownRow[];
 };
 export type PageWho = { key: string; label: string; source: PageSource };
 export type PageEvidence = { type: string; source: PageSource };
+export type PageCalculatorOfferor = {
+  id: string;
+  requested_musd: number;
+  cost_per_bsl_kusd: number;
+  months: number;
+};
+export type PageCalculatorDefaults = {
+  max_part1: number;
+  max_part2: number;
+  max_speed: number;
+  horizon_months: number;
+  offerors: PageCalculatorOfferor[];
+};
+export type PageCalculatorExpected = {
+  id: string;
+  value: string;
+  source: PageSource;
+};
+export type PageCalculator = {
+  defaults: PageCalculatorDefaults;
+  expected: PageCalculatorExpected[];
+};
 export type PageFile = {
   pageVersion: number;
   page: string;
@@ -152,4 +175,5 @@ export type PageFile = {
   breakdowns: PageBreakdown[];
   who: PageWho[];
   evidence: PageEvidence[];
+  calculator?: PageCalculator;
 };

@@ -381,7 +381,8 @@ async function main() {
       ) as PageFile;
       const a = assertPageData(page, index);
       const rowCount = page.breakdowns.reduce((n, b) => n + b.rows.length, 0);
-      const counts = `items=${page.items.length} phases=${page.phases.length} rows=${rowCount} who=${page.who.length} evidence=${page.evidence.length}`;
+      const computedCount = page.calculator ? page.calculator.expected.length : 0;
+      const counts = `items=${page.items.length} phases=${page.phases.length} rows=${rowCount} who=${page.who.length} evidence=${page.evidence.length} computed=${computedCount}`;
       if (a.ok) {
         bufLog(`PASS data pages/${page.page} ${counts}`);
       } else {
@@ -442,6 +443,9 @@ async function main() {
         bufLog(`  retrieved: ${retrievedIds}`);
         bufLog(`  answer[0..200]: ${JSON.stringify(result.answer.slice(0, 200))}`);
         bufLog(`  retried=${result.retried} answer_revised=${result.answer_revised} uncovered_numbers=[${result.uncovered_numbers.join(",")}] withheld_count=${withheldCount}`);
+        if (result.refused) {
+          bufLog(`  refusal_reason: ${result.refusal_reason ?? "(none)"}`);
+        }
         if (result.dropped && result.dropped.length > 0) {
           bufLog(`  dropped citations (${result.dropped.length}):`);
           for (const d of result.dropped) {

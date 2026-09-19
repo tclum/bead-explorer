@@ -1,0 +1,109 @@
+{
+  "pageVersion": 1,
+  "page": "selection",
+  "title": "Subgrantee selection",
+  "items": [
+    { "key": "areas", "label": "Project areas", "value": 4,
+      "source": { "doc": "fp", "page": 7, "quote": "The State of Hawaiʻi defined four project areas covering the entire state for subgrantee selection: County of Kauaʻi, City and County of Honolulu, County of Maui (inclusive of Kalawao), and County of Hawaiʻi." } },
+    { "key": "rfps", "label": "RFPs in the July 2025 round", "value": 8,
+      "source": { "doc": "fp", "page": 7, "quote": "UHBO released eight new RFPs in July 2025, as part of the final “Benefit of the Bargain” Round mandated by the new federal guidance." } },
+    { "key": "proposals", "label": "Proposals per project area, unserved and underserved RFPs", "value": 4,
+      "source": { "doc": "fp", "page": 30, "quote": "UHBO received four proposals for each project area for all unserved and underserved RFPs." } },
+    { "key": "total_uu", "label": "Points available, unserved and underserved RFPs", "value": 245,
+      "source": { "doc": "fp", "page": 25, "quote": "Total Points: 245" } },
+    { "key": "total_cai", "label": "Points available, CAI RFPs", "value": 240,
+      "source": { "doc": "fp", "page": 28, "quote": "Total Points: 240" } },
+    { "key": "locations", "label": "Funded locations", "value": 7033,
+      "source": { "doc": "ntia-fp-overview", "page": 1, "quote": "Locations: 7,033" } },
+    { "key": "awardees", "label": "Preliminary awards", "value": "Hawaiian Telcom (fiber) · Amazon Leo (LEO satellite)",
+      "source": { "doc": "ltgov-pr-2025-12-23", "page": 1, "quote": "The University of Hawaiʻi Broadband Office (UHBO) made preliminary awards to two telecommunications companies, Hawaiian Telcom and Amazon Leo, a low-earth orbit satellite provider, following a competitive RFP process." } }
+  ],
+  "phases": [
+    { "key": "issued", "label": "RFP issued", "value": "July 11, 2025",
+      "source": { "doc": "fp", "page": 8, "quote": "Date of Notice (RFP Issued) July 11, 2025" } },
+    { "key": "due", "label": "Proposals due", "value": "August 1, 2025",
+      "source": { "doc": "fp", "page": 8, "quote": "Closing Date for Receipt of Proposals August 1, 2025 (5pm HST)" } },
+    { "key": "review", "label": "Proposal review", "value": "August 2 to 4, 2025",
+      "source": { "doc": "fp", "page": 8, "quote": "Proposal Review Period August 2 - 4, 2025" } },
+    { "key": "award", "label": "Preliminary award", "value": "August 5, 2025",
+      "source": { "doc": "fp", "page": 8, "quote": "Date of Contractor Selection and Preliminary Award August 5, 2025" } },
+    { "key": "approved", "label": "Final Proposal approved by NTIA", "value": "November 18, 2025",
+      "source": { "doc": "uhbo-final-proposal", "page": 1, "quote": "Hawaiʻi received NTIA approval of its Final Proposal on November 18, 2025." } }
+  ],
+  "breakdowns": [
+    { "key": "rubric_uu", "title": "Scoring criteria, unserved and underserved RFPs", "sum_expected": 245, "total_key": "total_uu",
+      "rows": [
+        { "label": "Minimal BEAD Program Outlay (primary)", "value": 200, "source": { "doc": "fp", "page": 25, "quote": "Minimal BEAD Program Outlay 200" } },
+        { "label": "Speed to Deployment (secondary)", "value": 30, "source": { "doc": "fp", "page": 25, "quote": "Speed to Deployment 30" } },
+        { "label": "Speed of Network and Other Technical Capabilities (secondary)", "value": 15, "source": { "doc": "fp", "page": 25, "quote": "Speed of Network and Other Technical Capabilities 15" } }
+      ] },
+    { "key": "rubric_cai", "title": "Scoring criteria, CAI RFPs", "sum_expected": 240, "total_key": "total_cai",
+      "rows": [
+        { "label": "Minimal BEAD Program Outlay (primary)", "value": 200, "source": { "doc": "fp", "page": 28, "quote": "Minimal BEAD Program Outlay 200" } },
+        { "label": "Speed to Deployment (secondary)", "value": 30, "source": { "doc": "fp", "page": 28, "quote": "Speed to Deployment 30" } },
+        { "label": "Speed of Network and Other Technical Capabilities (secondary)", "value": 10, "source": { "doc": "fp", "page": 28, "quote": "Speed of Network and Other Technical Capabilities 10" } }
+      ] },
+    { "key": "speed_of_network", "title": "Speed of Network and Other Technical Capabilities, unserved and underserved RFPs", "sum_expected": 15,
+      "rows": [
+        { "label": "Max speed and latency", "value": 5, "source": { "doc": "fp", "page": 27, "quote": "Max speed and latency for unserved and underserved locations: Maximum score - 5 points" } },
+        { "label": "Longevity (useful life)", "value": 5, "source": { "doc": "fp", "page": 27, "quote": "Longevity: Maximum score - 5 points" } },
+        { "label": "Cost-effectiveness of future scalability", "value": 5, "source": { "doc": "fp", "page": 27, "quote": "Cost-effectiveness of Future Scalability: Maximum score - 5 points" } }
+      ] },
+    { "key": "technology", "title": "Funded locations by technology, approved Final Proposal", "sum_expected": 7033, "total_key": "locations",
+      "rows": [
+        { "label": "Fiber-to-the-premises", "value": 5748, "source": { "doc": "ntia-fp-overview", "page": 1, "quote": "Premises 5,748 81.7%" } },
+        { "label": "Low Earth Orbit satellite", "value": 1285, "source": { "doc": "ntia-fp-overview", "page": 1, "quote": "Satellite 1,285 18.3%" } }
+      ] }
+  ],
+  "who": [
+    { "key": "committee", "label": "Review committee", "source": { "doc": "fp", "page": 9, "quote": "The review committee consisted of five (5) members including the director of the state BEAD program, two (2) technical reviewers with experience in the telecommunications industry, and two (2) broadband specialists." } },
+    { "key": "coi", "label": "Conflicts of interest", "source": { "doc": "fp", "page": 9, "quote": "To ensure fairness, prior to scoring, the review committee was required to disclose any current financial, equity, role-based, or intellectual property conflict of interests (COI)." } },
+    { "key": "collusion", "label": "No collusion", "source": { "doc": "fp", "page": 9, "quote": "During the RFP process, Offerors were required to acknowledge in writing that there was no collusion amongst providers, consistent with the Federal Communications Commission’s prohibited communications rules for auction." } },
+    { "key": "public", "label": "Public criteria", "source": { "doc": "fp", "page": 10, "quote": "All scoring criteria used were publicly available." } },
+    { "key": "neutral", "label": "Technology neutral", "source": { "doc": "fp", "page": 9, "quote": "the scoring rubric was designed to be as objective as possible and technology neutral" } },
+    { "key": "fixed_areas", "label": "Fixed project areas", "source": { "doc": "fp", "page": 7, "quote": "Offerors were not able to define their own project areas." } },
+    { "key": "disqualified", "label": "Disqualification", "source": { "doc": "fp", "page": 30, "quote": "For unserved and underserved RFPs, one proposal was disqualified for not meeting the minimum qualifications." } },
+    { "key": "priority", "label": "Priority and non-priority", "source": { "doc": "fp", "page": 30, "quote": "Of the remaining three qualifying proposals, one was determined to be a priority broadband project, and the other two were determined to be non-priority broadband projects." } },
+    { "key": "awarded", "label": "Priority project awarded", "source": { "doc": "fp", "page": 30, "quote": "Since there were no other priority broadband project proposals, the one priority broadband project proposal was awarded." } },
+    { "key": "nonpriority", "label": "Non-priority scoring", "source": { "doc": "fp", "page": 30, "quote": "For the non-priority projects, there were no proposals that were within the 15% cost threshold, so the Minimal BEAD Program Outlay was the only applicable criteria used in the scoring and selection of the non-priority unserved and underserved proposals." } },
+    { "key": "cai_round", "label": "CAI RFPs", "source": { "doc": "fp", "page": 30, "quote": "UHBO received two proposals for each project area for all CAI RFPs." } },
+    { "key": "cai_dq", "label": "CAI disqualification", "source": { "doc": "fp", "page": 30, "quote": "For CAI RFPs, one proposal was disqualified for not meeting the minimum qualifications." } },
+    { "key": "periods", "label": "Performance periods", "source": { "doc": "ltgov-pr-2025-12-23", "page": 1, "quote": "The contracted performance period is four years for Hawaiian Telecom; 10 years for Amazon Leo." } }
+  ],
+  "evidence": [
+    { "type": "Part 1: requested BEAD funding", "source": { "doc": "fp", "page": 25, "quote": "The prospective subgrantee that requests the LOWEST amount of requested BEAD funding will receive the maximum score." } },
+    { "type": "Part 1 formula", "source": { "doc": "fp", "page": 25, "quote": "The points allocated to bidders with larger amounts will be equal to the lowest amount, multiplied by the maximum points for Part 1, and then divided by the larger amount." } },
+    { "type": "Part 2: cost per location", "source": { "doc": "fp", "page": 26, "quote": "The prospective subgrantee that offers the LOWEST amount of BEAD funding per broadband serviceable location (BSL) in the project area will receive the maximum score." } },
+    { "type": "Part 2 formula", "source": { "doc": "fp", "page": 26, "quote": "The points allocated to bidders with lower amounts of cost per location will be equal to the lower amount, multiplied by the maximum points for Part 2, and then divided by the largest amount." } },
+    { "type": "15 percent rule", "source": { "doc": "fp", "page": 26, "quote": "If proposals had project costs within 15 percent of the lowest cost proposal, the secondary criteria were used for all proposals." } },
+    { "type": "Speed to Deployment formula", "source": { "doc": "fp", "page": 26, "quote": "forty-eight (48) minus the Offeror’s proposed number of months to complete the deployment, then divided by forty-eight (48), then multiplied by the maximum number of points." } },
+    { "type": "Max speed and latency tiers", "source": { "doc": "fp", "page": 27, "quote": "100 Mbps download / 20 Mbps upload & less than 100ms 1 points 100 Mbps download / 50+ Mbps upload & less than 100ms 2 points 250 Mbps download / 50+ Mbps upload & less than 100ms 3 points 500 Mbps download / 100+ Mbps upload & less than 100ms 4 points 1000 Mbps download / 500+ Mbps upload & less than 100ms 5 points" } },
+    { "type": "Longevity", "source": { "doc": "fp", "page": 27, "quote": "Life spans of 15 years or greater will receive the maximum number of points; life spans shorter than 15 years will receive a prorated amount." } },
+    { "type": "Scalability", "source": { "doc": "fp", "page": 27, "quote": "Proposals that are very effective will receive the maximum score of 5 points. Proposals that are less effective will receive fewer points." } },
+    { "type": "CAI difference", "source": { "doc": "fp", "page": 27, "quote": "A similar approach was taken for the CAI RFP process, with the exception of removing the “max speed and latency” points for the Speed of Network and Other Technical Capabilities criteria, as the speed requirements were a minimum of 1 Gbps symmetrical." } }
+  ],
+  "calculator": {
+    "defaults": {
+      "max_part1": 100, "max_part2": 100, "max_speed": 30, "horizon_months": 48,
+      "offerors": [
+        { "id": "A", "requested_musd": 20, "cost_per_bsl_kusd": 2, "months": 36 },
+        { "id": "B", "requested_musd": 25, "cost_per_bsl_kusd": 1, "months": 30 },
+        { "id": "C", "requested_musd": 35, "cost_per_bsl_kusd": 1.5, "months": 24 }
+      ]
+    },
+    "expected": [
+      { "id": "part1-A", "value": "100", "source": { "doc": "fp", "page": 25, "quote": "Offeror A Requested: $20m (lowest amount) = Awarded 100 points" } },
+      { "id": "part1-B", "value": "80", "source": { "doc": "fp", "page": 26, "quote": "Offeror B Requested: $25m (higher) = 100 x (20/25) = Awarded 80 points" } },
+      { "id": "part1-C", "value": "57.1", "source": { "doc": "fp", "page": 26, "quote": "Offeror C Requested: $35m (higher) = 100 x (20/35) = Awarded 57.1 points" } },
+      { "id": "part2-A", "value": "50", "source": { "doc": "fp", "page": 26, "quote": "Offeror A cost per BSL: $2k (higher amount) = 100 x (1/2) = Awarded 50 points" } },
+      { "id": "part2-B", "value": "100", "source": { "doc": "fp", "page": 26, "quote": "Offeror B cost per BSL: $1k (lowest amount) = Awarded 100 points" } },
+      { "id": "part2-C", "value": "66.7", "source": { "doc": "fp", "page": 26, "quote": "Offeror C cost per BSL: $1.5k (higher amount) = 100 x (1/1.5) = Awarded 66.7 points" } },
+      { "id": "outlay-A", "value": "150", "source": { "doc": "fp", "page": 26, "quote": "Offeror A: 100 + 50 = 150 Points" } },
+      { "id": "outlay-B", "value": "180", "source": { "doc": "fp", "page": 26, "quote": "Offeror B: 80 + 100 = 180 Points" } },
+      { "id": "outlay-C", "value": "123.8", "source": { "doc": "fp", "page": 26, "quote": "Offeror C: 57.1 + 66.7 = 123.8 Points" } },
+      { "id": "speed-A", "value": "7.5", "source": { "doc": "fp", "page": 26, "quote": "Offeror A: 36 months to complete project = ((48-36)/48) * 30 = Awarded 7.5 points" } },
+      { "id": "speed-B", "value": "11.25", "source": { "doc": "fp", "page": 26, "quote": "Offeror B: 30 months to complete project = ((48-30)/48) * 30 = Awarded 11.25 points" } },
+      { "id": "speed-C", "value": "15", "source": { "doc": "fp", "page": 26, "quote": "Offeror C: 24 months to complete project = ((48-24)/48) * 30 = Awarded 15 points" } }
+    ]
+  }
+}

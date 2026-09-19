@@ -391,6 +391,128 @@
         "who": [],
         "evidence": []
       }
+    },
+    {
+      "letter": "aa",
+      "kind": "must_fail",
+      "reason": "breakdown whose total_key names an item that does not exist",
+      "kind_check": "page-data",
+      "page": {
+        "pageVersion": 1,
+        "page": "selftest-aa",
+        "title": "selftest aa",
+        "items": [
+          { "key": "total", "label": "Total", "value": 100, "source": { "doc": "x", "page": 1, "quote": "The Hawaiʻi allocation is $100 exactly" } }
+        ],
+        "phases": [],
+        "breakdowns": [
+          {
+            "key": "b1",
+            "title": "b1",
+            "sum_expected": 100,
+            "total_key": "does_not_exist",
+            "rows": [
+              { "label": "row1", "value": 100, "source": { "doc": "x", "page": 1, "quote": "The Hawaiʻi allocation is $100 exactly" } }
+            ]
+          }
+        ],
+        "who": [],
+        "evidence": []
+      }
+    },
+    {
+      "letter": "ab",
+      "kind": "must_fail",
+      "reason": "calculator.expected entry whose quote is not in the canned corpus",
+      "kind_check": "page-data",
+      "page": {
+        "pageVersion": 1,
+        "page": "selftest-ab",
+        "title": "selftest ab",
+        "items": [],
+        "phases": [],
+        "breakdowns": [],
+        "who": [],
+        "evidence": [],
+        "calculator": {
+          "defaults": {
+            "max_part1": 100, "max_part2": 100, "max_speed": 30, "horizon_months": 48,
+            "offerors": [
+              { "id": "A", "requested_musd": 20, "cost_per_bsl_kusd": 2, "months": 36 }
+            ]
+          },
+          "expected": [
+            { "id": "part1-A", "value": "100", "source": { "doc": "x", "page": 1, "quote": "THIS EXPECTED QUOTE IS NOT IN THE CANNED CORPUS AT ALL" } }
+          ]
+        }
+      }
+    },
+    {
+      "letter": "ac",
+      "kind": "must_pass",
+      "reason": "page with a resolving total_key and one calculator.expected entry whose quote is in the canned corpus",
+      "kind_check": "page-data",
+      "page": {
+        "pageVersion": 1,
+        "page": "selftest-ac",
+        "title": "selftest ac",
+        "items": [
+          { "key": "total", "label": "Total", "value": 100, "source": { "doc": "x", "page": 1, "quote": "The Hawaiʻi allocation is $100 exactly" } }
+        ],
+        "phases": [],
+        "breakdowns": [
+          {
+            "key": "b1",
+            "title": "b1",
+            "sum_expected": 100,
+            "total_key": "total",
+            "rows": [
+              { "label": "row1", "value": 100, "source": { "doc": "x", "page": 1, "quote": "The Hawaiʻi allocation is $100 exactly" } }
+            ]
+          }
+        ],
+        "who": [],
+        "evidence": [],
+        "calculator": {
+          "defaults": {
+            "max_part1": 100, "max_part2": 100, "max_speed": 30, "horizon_months": 48,
+            "offerors": [
+              { "id": "A", "requested_musd": 20, "cost_per_bsl_kusd": 2, "months": 36 }
+            ]
+          },
+          "expected": [
+            { "id": "part1-A", "value": "100", "source": { "doc": "x", "page": 1, "quote": "The Hawaiʻi allocation is $100 exactly" } }
+          ]
+        }
+      }
+    },
+    {
+      "letter": "ad",
+      "kind": "must_fail",
+      "reason": "breakdown with a resolving total_key, rows summing to sum_expected, but the named item's value differs from sum_expected and no note explains the difference",
+      "kind_check": "page-data",
+      "page": {
+        "pageVersion": 1,
+        "page": "selftest-ad",
+        "title": "selftest ad",
+        "items": [
+          { "key": "total", "label": "Total", "value": 42, "source": { "doc": "y", "page": 1, "quote": "Coverage started in 2024 and covers 42 counties" } }
+        ],
+        "phases": [],
+        "breakdowns": [
+          {
+            "key": "b1",
+            "title": "b1",
+            "sum_expected": 100,
+            "total_key": "total",
+            "rows": [
+              { "label": "row1", "value": 100, "source": { "doc": "x", "page": 1, "quote": "The Hawaiʻi allocation is $100 exactly" } }
+            ]
+          }
+        ],
+        "who": [],
+        "evidence": []
+      }
     }
   ]
 }

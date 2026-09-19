@@ -23,6 +23,18 @@ FCC, or any vendor. Public data only.
 - **`/challenge`** — Challenge process: tiles, three phases, three breakdowns
   (by challenger type, by challenge type, by disposition), who could file, and
   what evidence counted, plus the Ask box.
+- **`/selection`** — Subgrantee selection: tiles, five-phase timeline, three
+  rubric breakdowns, a scoring calculator, the technology outcome, how the
+  process was run, and the formulas and rules, plus the Ask box.
+
+The scoring calculator on `/selection` runs the Final Proposal's published
+Part 1, Part 2, and Speed to Deployment formulas (pages 25–26) in the
+browser. Its defaults are the document's own worked examples (Offerors A, B,
+C); the twelve resulting numbers are unit-tested against the printed
+examples in `src/lib/score.test.ts`, and `pnpm smoke` re-asserts each one
+in the rendered HTML via `data-computed="<id>|<value>"`. Numbers are
+labelled *computed* and never presented as facts about Hawaiʻi's actual
+bids, which are not public.
 
 Every numeric figure on a page lives in `data/pages/<page>.json` with a
 receipt (verbatim quote, doc, PDF page). `pnpm eval` checks each receipt

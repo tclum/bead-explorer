@@ -13,25 +13,15 @@ and every page probed by smoke. The home screen stays the demo path.
 
 ## Shipped
 
-- **2026-09-15** — `fcc32cd`/`119bfea`/`1b5ebfe`: Milestones A–B — ingest pipeline
-  (11 sources, 581 chunks), HTML extraction, retrieval + verification + number
-  coverage + prompt caching + `--only`.
+- **2026-09-15** — `fcc32cd`/`119bfea`/`1b5ebfe`: Milestones A–B — ingest (11 sources, 581 chunks), HTML extraction, retrieval + verification + number coverage + prompt caching + `--only`.
 - **2026-09-16** — `caf98c8`: Slice 1.1 — hardened refusal path; `pnpm ask`/`smoke`. First deploy.
 - **2026-09-16** — `19de3a2`: Slice 1.2 — sentence-aware chunking, segment verification, drop reasons, f09, `/api/version` + SHA-checked smoke; `k=20`, pool ×6.
-- **2026-09-16 decision** — **Withhold, don't refuse.** Uncovered sentences after retry
-  are pruned; refusal only when the pruned answer is empty. Selftest u/v.
-- **2026-09-16** — `fecdcdf`: Slice 2 — county choropleth + two-series table
-  (FCC BDC Dec 2025 beside BEAD FP Dec 2024), `pnpm fetch:bead`/`geo`, smoke probe 3.
-- **2026-09-17** — `3cfdb1a`: Slice 3 — ink palette + Fraunces/JetBrains Mono via
-  `next/font/google` (self-hosted); provenance strip, ask elapsed, build-SHA footer.
-- **2026-09-17 decision**: workflow pages are named after Final Proposal sections,
-  never vendor products. Order: `/challenge`, `/selection`, `/oversight`,
-  `/projects`, `/anchors` (conditional). Figures in `data/pages/<page>.json` with
-  eval-checked receipts; pages embed the Ask box and never touch `src/lib/*`.
-- **2026-09-17** — Slice 4 (this commit): `/challenge` + site frame
-  (SiteHeader nav, SiteFooter, `src/lib/build.ts`); `data/pages/challenge.json`;
-  `assertPageData` + `pnpm eval` pages loop; smoke v0.4.0 (per-page probe +
-  fonts/stamp attribution); f10, f11 fixtures; selftest cases x/y/z.
+- **2026-09-16 decision** — **Withhold, don't refuse.** Uncovered sentences after retry are pruned; refusal only when the pruned answer is empty. Selftest u/v.
+- **2026-09-16** — `fecdcdf`: Slice 2 — county choropleth + two-series table (FCC BDC Dec 2025 beside BEAD FP Dec 2024), `pnpm fetch:bead`/`geo`, smoke probe 3.
+- **2026-09-17** — `3cfdb1a`: Slice 3 — ink palette + Fraunces/JetBrains Mono via `next/font/google` (self-hosted); provenance strip, ask elapsed, build-SHA footer.
+- **2026-09-17 decision**: workflow pages named after Final Proposal sections, never vendor products. Order: `/challenge`, `/selection`, `/oversight`, `/projects`, `/anchors` (conditional). Figures in `data/pages/<page>.json`; pages embed Ask, never touch `src/lib/*`.
+- **2026-09-17** — `098e7e3`: Slice 4 — `/challenge` + site frame (nav, footer, `src/lib/build.ts`); `data/pages/challenge.json`; `assertPageData` + `pnpm eval` pages loop; smoke v0.4.0; f10/f11; selftest x/y/z.
+- **2026-09-18** — Slice 5 (this commit): `/selection` + shared page components (`src/components/page/*`); `data/pages/selection.json` with `calculator`; `total_key` + `PageCalculator` in types + `assertPageData`; `src/lib/score.ts` + tests driven by the file's `expected`; `ScoreCalculator`; smoke v0.5.0 (loops `data/pages/*.json`, asserts `data-computed`); f12/f13; selftest aa/ab/ac/ad.
 
 See `docs/findings-provenance.md` for the durable lessons behind these
 entries (chunker, verification, retry rules, retrieval, cost).
@@ -55,31 +45,35 @@ entries (chunker, verification, retry rules, retrieval, cost).
 
 ## Open questions
 
+- **2026-09-18 research**: f04 refused once in the Slice 5 full run (retried,
+  nothing dropped, withheld to empty) with uhbo-challenge:p1:2 at rank 17 of
+  20; smoke passed the same fixture twice the same hour. Log every recurrence
+  with its refusal_reason; if it recurs, capture the first-turn output with
+  `pnpm ask --debug`.
+- **2026-09-18 research**: the per-document diversity penalty pushed fp:p26
+  and fp:p29 out of the top 20 for f13 while five other fp chunks got in.
+  Probe: f13 with cite restricted to fp pages; measure PER_DOC_PENALTY
+  variants over three runs before changing anything. Retrieval tuning is its
+  own slice.
 - **2026-09-16 research**: would numbered passage labels (`[1]..[12]`) reduce
-  mis-labeled citations? Two of three citations on the deployed challenge question
-  were re-attributed. Measure over three eval runs with each labeling.
+  mis-labeled citations? Measure over three eval runs with each labeling.
 - **2026-09-16 research**: retrieval quality for short or broad queries; f09 is the probe.
 - **2026-09-17 research**: columns, row counts, and gate values for the four
   approved Final Proposal spreadsheets not yet fetched (`fp_subgrantees_approved.xlsx`,
   `fp_deployment_projects_approved.xlsx`, `fp_no_BEAD_locations_approved.xlsx`,
-  `fp_cai_approved.xlsx`, linked from the UHBO Final Proposal page). Resolve in each
-  fetch script's recon step: print headers and counts, then set gates from them.
-- **2026-09-17 research**: does the challenge-results zip ("CSV files" on the
-  results page) carry per-challenge records with county or location id? If so,
-  a county breakdown of challenges is possible.
+  `fp_cai_approved.xlsx`). Resolve in each fetch script's recon step.
+- **2026-09-17 research**: does the challenge-results zip carry per-challenge
+  records with county or location id? If so, a county breakdown is possible.
 - **2026-09-17 research**: owner, access, and terms of the AGOL layer
-  `fp_locations_approved` (lat/lon per funded location) before any per-location map.
-- **2026-09-17 research**: vintage and columns of the 2024 CAI list v3
-  (UHBO Initial Proposal page) versus `fp_cai_approved.xlsx`.
+  `fp_locations_approved` before any per-location map; vintage and columns of
+  the 2024 CAI list v3 versus `fp_cai_approved.xlsx`.
 
 ## Not yet specified
 
 - Any per-source override for `uhbo-challenge` if the FAQ-heavy content
   competes with the answer chunk on other queries.
 - Whether to embed a small MMR/BM25 tuning report in the UI.
-- Workflow pages: per-page Ask chips and fixtures per page; report export form
-  (print vs. Markdown); the scoring calculator's input bounds and "computed,
-  not quoted" labeling.
+- Workflow pages: report export form (print vs. Markdown).
 
 ## Accepted gaps
 
@@ -91,13 +85,16 @@ entries (chunker, verification, retry rules, retrieval, cost).
   from the corpus via `page_range: [1, 41]`.
 - Claim coverage is numeric only. Names and dates rendered as prose (e.g., "the
   Final Proposal", "August 2024") are not claim-checked; only the digit runs are.
-- Refusal explanations are model text checked only for figures, not claims. A
-  figure-free reason passes through; a reason with digits is replaced by a fixed sentence.
+- Refusal explanations are model text checked only for figures, not claims:
+  figure-free reasons pass through; digit-bearing reasons are rewritten.
 - The BEAD project-areas series counts approved-funded locations by project area
-  (7,009 total), not a served/unserved measure of the whole county. It cannot be added
-  or subtracted against the FCC BDC BSL tiers, which use a different location fabric.
+  (7,009 total), not a served/unserved measure of the whole county — it cannot
+  be added or subtracted against FCC BDC BSL tiers (different fabric).
 - The UHBO Challenge Process page's six challenge-type counts sum to **37,595**
   against a stated total of **37,593**; `/challenge` shows both, source unexplained.
+- The `/selection` calculator covers only the formulaic criteria (Outlay Parts
+  1/2, Speed to Deployment); the 15 percent rule and judged technical sub-scores
+  are described, not computed.
 
 ## Out of scope
 

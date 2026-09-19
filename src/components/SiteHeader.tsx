@@ -3,6 +3,7 @@ import Link from "next/link";
 const NAV: { href: string; label: string }[] = [
   { href: "/", label: "Overview" },
   { href: "/challenge", label: "Challenge process" },
+  { href: "/selection", label: "Subgrantee selection" },
 ];
 
 export default function SiteHeader({ current }: { current: string }) {

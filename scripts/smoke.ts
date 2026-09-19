@@ -1,15 +1,16 @@
-import { readFileSync } from "node:fs";
+import { readdirSync, readFileSync } from "node:fs";
 import { execSync } from "node:child_process";
 import path from "node:path";
 import { assertFixture, type Fixture } from "../src/lib/assert";
+import { scoreOfferors } from "../src/lib/score";
 import type { GroundedResult, PageFile } from "../src/lib/types";
 
-const SMOKE_VERSION = "smoke v0.4.0";
+const SMOKE_VERSION = "smoke v0.5.0";
 const ROOT = process.cwd();
 const FIXTURES_PATH = path.join(ROOT, "eval", "fixtures.json");
 const FCC_CSV_PATH = path.join(ROOT, "data", "fcc-hi-summary.csv");
 const BEAD_CSV_PATH = path.join(ROOT, "data", "bead-hi-project-areas.csv");
-const CHALLENGE_PAGE_PATH = path.join(ROOT, "data", "pages", "challenge.json");
+const PAGES_DIR = path.join(ROOT, "data", "pages");
 const TIMEOUT_MS = 45_000;
 
 const COUNTY_GEOIDS = ["15001", "15003", "15005", "15007", "15009"];
@@ -243,49 +244,90 @@ async function main() {
     }
   }
 
-  // Check 4: GET /challenge — the page must carry a data-item="key|value"
-  // attribute for every numeric items entry and a data-row="key|label|value"
-  // attribute for every breakdown row from data/pages/challenge.json. Values
-  // are formatted with the same formatCount used by the page, and the smoke
-  // asserts the exact attribute string appears in the HTML — a plain
-  // substring check would pass on any run of digits in surrounding markup.
-  const challengePage = JSON.parse(readFileSync(CHALLENGE_PAGE_PATH, "utf8")) as PageFile;
-  const challengeExpect: { label: string; needle: string }[] = [];
-  for (const it of challengePage.items) {
-    if (typeof it.value === "number") {
-      challengeExpect.push({
-        label: `items[${it.key}]`,
-        needle: `data-item="${it.key}|${formatCount(it.value)}"`,
-      });
-    }
-  }
-  for (const b of challengePage.breakdowns) {
-    for (const row of b.rows) {
-      challengeExpect.push({
-        label: `breakdowns[${b.key}].${row.label}`,
-        needle: `data-row="${b.key}|${row.label}|${formatCount(row.value)}"`,
-      });
-    }
-  }
-  const challenge = await fetchPage(baseUrl!, "/challenge");
-  if (!challenge.ok) {
-    bufLog(`FAIL /challenge fetch: ${challenge.error}`);
-    failures += 1;
-  } else {
-    const missingCh: string[] = [];
-    for (const e of challengeExpect) {
-      if (!challenge.body.includes(e.needle)) {
-        missingCh.push(`${e.label} needle=${JSON.stringify(e.needle)}`);
+  // Check 4+: one probe per data/pages/*.json — each rendered page must carry
+  // a data-item="key|value" for every numeric items entry, a data-row=
+  // "key|label|value" for every breakdown row, and (when the page has a
+  // calculator) a data-computed="<id>|<value>" for every entry in
+  // calculator.expected. The expected values for the computed cells are
+  // derived from the file at run time by running scoreOfferors on the
+  // defaults — the smoke does not know the numbers, so a mismatch between
+  // the file and the page catches drift.
+  const pageFiles = readdirSync(PAGES_DIR)
+    .filter((f) => f.endsWith(".json"))
+    .sort();
+  for (const fname of pageFiles) {
+    const pageData = JSON.parse(
+      readFileSync(path.join(PAGES_DIR, fname), "utf8"),
+    ) as PageFile;
+    const pathname = `/${pageData.page}`;
+    const needles: { label: string; needle: string }[] = [];
+    for (const it of pageData.items) {
+      if (typeof it.value === "number") {
+        needles.push({
+          label: `items[${it.key}]`,
+          needle: `data-item="${it.key}|${formatCount(it.value)}"`,
+        });
       }
     }
-    const frame = frameChecks(challenge.body);
+    for (const b of pageData.breakdowns) {
+      for (const row of b.rows) {
+        needles.push({
+          label: `breakdowns[${b.key}].${row.label}`,
+          needle: `data-row="${b.key}|${row.label}|${formatCount(row.value)}"`,
+        });
+      }
+    }
+    const computedNeedles: { label: string; needle: string }[] = [];
+    if (pageData.calculator) {
+      const scored = scoreOfferors(pageData.calculator.defaults);
+      const byId = new Map(scored.map((s) => [s.id, s]));
+      for (const exp of pageData.calculator.expected) {
+        const [field, offerorId] = exp.id.split("-");
+        const s = byId.get(offerorId);
+        if (!s) {
+          computedNeedles.push({
+            label: `calculator.expected[${exp.id}]`,
+            needle: `<offeror ${offerorId} not scored>`,
+          });
+          continue;
+        }
+        const value = (s as Record<string, string>)[field];
+        computedNeedles.push({
+          label: `calculator.expected[${exp.id}]`,
+          needle: `data-computed="${exp.id}|${value}"`,
+        });
+      }
+    }
+    const resp = await fetchPage(baseUrl!, pathname);
+    if (!resp.ok) {
+      bufLog(`FAIL ${pathname} fetch: ${resp.error}`);
+      failures += 1;
+      continue;
+    }
+    const missing: string[] = [];
+    for (const e of needles) {
+      if (!resp.body.includes(e.needle)) {
+        missing.push(`${e.label} needle=${JSON.stringify(e.needle)}`);
+      }
+    }
+    for (const e of computedNeedles) {
+      if (!resp.body.includes(e.needle)) {
+        missing.push(`${e.label} needle=${JSON.stringify(e.needle)}`);
+      }
+    }
+    const frame = frameChecks(resp.body);
     const framePart = `fonts=${frame.fontsOk ? "self-hosted" : "google"} stamp=${frame.stampOk ? "ok" : "missing"}`;
-    if (missingCh.length === 0 && frame.fontsOk && frame.stampOk) {
-      bufLog(`PASS /challenge values=${challengeExpect.length} ${framePart}`);
+    const computedPart = ` computed=${computedNeedles.length}`;
+    if (missing.length === 0 && frame.fontsOk && frame.stampOk) {
+      bufLog(
+        `PASS ${pathname} values=${needles.length}${computedPart} ${framePart}`,
+      );
     } else {
       failures += 1;
-      const missPart = missingCh.length === 0 ? "" : ` missing ${missingCh.length}: ${missingCh.join("; ")}`;
-      bufLog(`FAIL /challenge ${framePart}${missPart}`);
+      const missPart = missing.length === 0
+        ? ""
+        : ` missing ${missing.length}: ${missing.join("; ")}`;
+      bufLog(`FAIL ${pathname} values=${needles.length}${computedPart} ${framePart}${missPart}`);
     }
   }
 

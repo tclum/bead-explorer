@@ -93,18 +93,35 @@ Each file describes the figures on one page. Shape (`pageVersion: 1`):
   and `source: { doc, page, quote }`.
 - `phases[]` — process phases. Each has `key, label, value` and `source`.
 - `breakdowns[]` — proportional tables. Each has `key, title, sum_expected`
-  (integer), optional `note`, and `rows[]` where each row has
-  `label, value` (integer) and `source`. Rows must sum to `sum_expected`;
-  when they don't, the page renders the mismatch in-line and the `note`
-  explains it.
+  (integer), optional `note`, optional `total_key` (string), and `rows[]`
+  where each row has `label, value` (integer) and `source`. Rows must sum
+  to `sum_expected`; when they don't, the page renders the mismatch in-line
+  and the `note` explains it. When `total_key` is set, it names an
+  `items[]` entry whose numeric value the sum line compares against — the
+  page's "stated total" sentence is driven by that item rather than a
+  page-local constant.
 - `who[]`, `evidence[]` — supporting list items, each with a `source`.
+- `calculator` (optional) — a `{ defaults, expected[] }` pair for a client
+  calculator on the page. `defaults` carries `max_part1, max_part2,
+  max_speed, horizon_months` and an `offerors[]` list; `expected[]` is
+  the document's own worked-example numbers, each with an `id` (like
+  `part1-A`, `speed-C`), the printed `value`, and a `source` quote and
+  page. Unit tests in `src/lib/score.test.ts` drive off these entries so
+  the calculator's output is pinned to the document.
 
 Gates enforced by `pnpm eval` (per file, always run):
 
 - Every `source.quote` normalizes to a substring of the ingested text at
   `doc:page` (same rule as `status.json` — see `assertQuoteInCorpus`).
 - For each breakdown, the row values sum to `sum_expected` exactly.
+- When a breakdown carries `total_key`, the named `items[]` entry must
+  exist, hold a numeric value, and equal `sum_expected`.
+- When the file carries a `calculator`, every `expected[].source.quote`
+  is checked against the corpus like every other receipt.
 
-`pnpm eval --selftest` covers three page-data cases:
-`x` (a quote that isn't in the canned corpus, must fail), `y` (rows that
-don't sum, must fail), `z` (a valid two-row page, must pass).
+`pnpm eval --selftest` covers six page-data cases: `x` (a quote that isn't
+in the canned corpus, must fail), `y` (rows that don't sum, must fail),
+`z` (a valid two-row page, must pass), `aa` (a `total_key` that names no
+item, must fail), `ab` (a `calculator.expected` quote absent from the
+canned corpus, must fail), and `ac` (a page with a resolving `total_key`
+and a valid `calculator.expected` entry, must pass).
