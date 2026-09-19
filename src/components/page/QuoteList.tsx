@@ -13,10 +13,17 @@ function WhoRow({ item }: { item: PageWho }) {
   );
 }
 
-export default function QuoteList({ items }: { items: PageWho[] }) {
+export default function QuoteList({
+  items,
+  group,
+}: {
+  items: PageWho[];
+  group?: string;
+}) {
+  const shown = group === undefined ? items : items.filter((w) => w.group === group);
   return (
     <ul className="grid grid-cols-1 gap-4 md:grid-cols-2">
-      {items.map((w) => (
+      {shown.map((w) => (
         <WhoRow key={w.key} item={w} />
       ))}
     </ul>

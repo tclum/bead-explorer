@@ -3,13 +3,14 @@ import { execSync } from "node:child_process";
 import path from "node:path";
 import { assertFixture, type Fixture } from "../src/lib/assert";
 import { scoreOfferors } from "../src/lib/score";
-import type { GroundedResult, PageFile } from "../src/lib/types";
+import type { GroundedResult, PageFile, StatusFile } from "../src/lib/types";
 
-const SMOKE_VERSION = "smoke v0.5.0";
+const SMOKE_VERSION = "smoke v0.6.0";
 const ROOT = process.cwd();
 const FIXTURES_PATH = path.join(ROOT, "eval", "fixtures.json");
 const FCC_CSV_PATH = path.join(ROOT, "data", "fcc-hi-summary.csv");
 const BEAD_CSV_PATH = path.join(ROOT, "data", "bead-hi-project-areas.csv");
+const STATUS_PATH = path.join(ROOT, "data", "status.json");
 const PAGES_DIR = path.join(ROOT, "data", "pages");
 const TIMEOUT_MS = 45_000;
 
@@ -328,6 +329,77 @@ async function main() {
         ? ""
         : ` missing ${missing.length}: ${missing.join("; ")}`;
       bufLog(`FAIL ${pathname} values=${needles.length}${computedPart} ${framePart}${missPart}`);
+    }
+  }
+
+  // Check /report: builds the expected data-receipt set from status.json and
+  // every data/pages/*.json file with the same scope/section/id rules the
+  // page renders. Every expected attribute string must appear in the HTML,
+  // and data-receipt-count must equal the set's size.
+  const status = JSON.parse(readFileSync(STATUS_PATH, "utf8")) as StatusFile;
+  const reportPages: PageFile[] = pageFiles.map(
+    (fname) =>
+      JSON.parse(readFileSync(path.join(PAGES_DIR, fname), "utf8")) as PageFile,
+  );
+  const expectedReceipts: string[] = [];
+  for (const item of status.items) {
+    expectedReceipts.push(`data-receipt="status|items|${item.key}"`);
+  }
+  for (const p of reportPages) {
+    for (const it of p.items) {
+      expectedReceipts.push(`data-receipt="${p.page}|items|${it.key}"`);
+    }
+    for (const ph of p.phases) {
+      expectedReceipts.push(`data-receipt="${p.page}|phases|${ph.key}"`);
+    }
+    for (const b of p.breakdowns) {
+      for (let i = 0; i < b.rows.length; i += 1) {
+        expectedReceipts.push(
+          `data-receipt="${p.page}|rows|${b.key}:${i}"`,
+        );
+      }
+    }
+    for (const w of p.who) {
+      expectedReceipts.push(`data-receipt="${p.page}|who|${w.key}"`);
+    }
+    for (let i = 0; i < p.evidence.length; i += 1) {
+      expectedReceipts.push(`data-receipt="${p.page}|evidence|${i}"`);
+    }
+    if (p.calculator) {
+      for (const exp of p.calculator.expected) {
+        expectedReceipts.push(`data-receipt="${p.page}|computed|${exp.id}"`);
+      }
+    }
+  }
+  const expectedCount = expectedReceipts.length;
+  const report = await fetchPage(baseUrl!, "/report");
+  if (!report.ok) {
+    bufLog(`FAIL /report fetch: ${report.error}`);
+    failures += 1;
+  } else {
+    const missing: string[] = [];
+    for (const needle of expectedReceipts) {
+      if (!report.body.includes(needle)) missing.push(needle);
+    }
+    const countMatch = report.body.match(/data-receipt-count="(\d+)"/);
+    const gotCount = countMatch ? Number(countMatch[1]) : NaN;
+    const countOk = Number.isFinite(gotCount) && gotCount === expectedCount;
+    const frame = frameChecks(report.body);
+    const framePart = `fonts=${frame.fontsOk ? "self-hosted" : "google"} stamp=${frame.stampOk ? "ok" : "missing"}`;
+    if (missing.length === 0 && countOk && frame.fontsOk && frame.stampOk) {
+      bufLog(`PASS /report receipts=${expectedCount} ${framePart}`);
+    } else {
+      failures += 1;
+      const parts: string[] = [];
+      if (missing.length > 0) {
+        parts.push(`missing ${missing.length}: ${missing.join("; ")}`);
+      }
+      if (!countOk) {
+        parts.push(
+          `count=${Number.isFinite(gotCount) ? gotCount : "missing"} expected=${expectedCount}`,
+        );
+      }
+      bufLog(`FAIL /report ${framePart}${parts.length > 0 ? " " + parts.join(" ") : ""}`);
     }
   }
 

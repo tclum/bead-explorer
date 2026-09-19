@@ -37,12 +37,15 @@ export default function EvidenceTable({
   typeHeader,
   quoteHeader,
   caption,
+  group,
 }: {
   items: PageEvidence[];
   typeHeader: string;
   quoteHeader: string;
   caption: string;
+  group?: string;
 }) {
+  const shown = group === undefined ? items : items.filter((e) => e.group === group);
   return (
     <div className="overflow-x-auto rounded border border-ink-800 bg-ink-900">
       <table className="w-full text-left">
@@ -61,7 +64,7 @@ export default function EvidenceTable({
           </tr>
         </thead>
         <tbody>
-          {items.map((e) => (
+          {shown.map((e) => (
             <EvidenceRow key={e.type} item={e} />
           ))}
         </tbody>

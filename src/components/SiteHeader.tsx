@@ -4,6 +4,8 @@ const NAV: { href: string; label: string }[] = [
   { href: "/", label: "Overview" },
   { href: "/challenge", label: "Challenge process" },
   { href: "/selection", label: "Subgrantee selection" },
+  { href: "/oversight", label: "Oversight" },
+  { href: "/report", label: "Receipted report" },
 ];
 
 export default function SiteHeader({ current }: { current: string }) {

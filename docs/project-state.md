@@ -21,7 +21,8 @@ and every page probed by smoke. The home screen stays the demo path.
 - **2026-09-17** — `3cfdb1a`: Slice 3 — ink palette + Fraunces/JetBrains Mono via `next/font/google` (self-hosted); provenance strip, ask elapsed, build-SHA footer.
 - **2026-09-17 decision**: workflow pages named after Final Proposal sections, never vendor products. Order: `/challenge`, `/selection`, `/oversight`, `/projects`, `/anchors` (conditional). Figures in `data/pages/<page>.json`; pages embed Ask, never touch `src/lib/*`.
 - **2026-09-17** — `098e7e3`: Slice 4 — `/challenge` + site frame (nav, footer, `src/lib/build.ts`); `data/pages/challenge.json`; `assertPageData` + `pnpm eval` pages loop; smoke v0.4.0; f10/f11; selftest x/y/z.
-- **2026-09-18** — Slice 5 (this commit): `/selection` + shared page components (`src/components/page/*`); `data/pages/selection.json` with `calculator`; `total_key` + `PageCalculator` in types + `assertPageData`; `src/lib/score.ts` + tests driven by the file's `expected`; `ScoreCalculator`; smoke v0.5.0 (loops `data/pages/*.json`, asserts `data-computed`); f12/f13; selftest aa/ab/ac/ad.
+- **2026-09-18** — `7476965`: Slice 5 — `/selection` + shared page components (`src/components/page/*`); `data/pages/selection.json` with `calculator`; `total_key` + `PageCalculator` in types + `assertPageData`; `src/lib/score.ts` + tests driven by the file's `expected`; `ScoreCalculator`; smoke v0.5.0 (loops `data/pages/*.json`, asserts `data-computed`); f12/f13; selftest aa/ab/ac/ad.
+- **2026-09-19** — Slice 6 (this commit): `/oversight` (monitoring, risk tiers, reimbursement, commitments) + `data/pages/oversight.json`; `group?` on `PageWho`/`PageEvidence` with grouped rendering in `QuoteList`/`EvidenceTable`; `/report` (receipted report) with `PrintButton` and a print stylesheet; nav gains Oversight and Receipted report (five hrefs, test updated); smoke v0.6.0 (adds `/report` receipts probe); f14/f15; selftest ae/af.
 
 See `docs/findings-provenance.md` for the durable lessons behind these
 entries (chunker, verification, retry rules, retrieval, cost).
@@ -45,11 +46,10 @@ entries (chunker, verification, retry rules, retrieval, cost).
 
 ## Open questions
 
-- **2026-09-18 research**: f04 refused once in the Slice 5 full run (retried,
-  nothing dropped, withheld to empty) with uhbo-challenge:p1:2 at rank 17 of
-  20; smoke passed the same fixture twice the same hour. Log every recurrence
-  with its refusal_reason; if it recurs, capture the first-turn output with
-  `pnpm ask --debug`.
+- **Flake log (research)**: f04 (Slice 5, 2026-09-18) refused once with
+  uhbo-challenge:p1:2 at rank 17/20, reroll clean. f12 (Slice 6, 2026-09-19)
+  answered from a pre-restructuring version ("Total Points were 365",
+  missing 200), reroll 5/5 clean. Capture `pnpm ask --debug` on recurrence.
 - **2026-09-18 research**: the per-document diversity penalty pushed fp:p26
   and fp:p29 out of the top 20 for f13 while five other fp chunks got in.
   Probe: f13 with cite restricted to fp pages; measure PER_DOC_PENALTY
@@ -73,7 +73,6 @@ entries (chunker, verification, retry rules, retrieval, cost).
 - Any per-source override for `uhbo-challenge` if the FAQ-heavy content
   competes with the answer chunk on other queries.
 - Whether to embed a small MMR/BM25 tuning report in the UI.
-- Workflow pages: report export form (print vs. Markdown).
 
 ## Accepted gaps
 
@@ -95,6 +94,9 @@ entries (chunker, verification, retry rules, retrieval, cost).
 - The `/selection` calculator covers only the formulaic criteria (Outlay Parts
   1/2, Speed to Deployment); the 15 percent rule and judged technical sub-scores
   are described, not computed.
+- The oversight page shows the state's monitoring and reimbursement commitments;
+  no subgrantee report, site-visit result, or reimbursement is public yet, so
+  the page cannot show performance against them.
 
 ## Out of scope
 

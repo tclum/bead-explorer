@@ -100,7 +100,10 @@ Each file describes the figures on one page. Shape (`pageVersion: 1`):
   `items[]` entry whose numeric value the sum line compares against — the
   page's "stated total" sentence is driven by that item rather than a
   page-local constant.
-- `who[]`, `evidence[]` — supporting list items, each with a `source`.
+- `who[]`, `evidence[]` — supporting list items, each with a `source` and an
+  optional `group` (a string; pages filter these lists by group to render
+  the same file across two or more sections). `breakdowns[]` may be an
+  empty array when a page has no proportional tables.
 - `calculator` (optional) — a `{ defaults, expected[] }` pair for a client
   calculator on the page. `defaults` carries `max_part1, max_part2,
   max_speed, horizon_months` and an `offerors[]` list; `expected[]` is

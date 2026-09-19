@@ -513,6 +513,46 @@
         "who": [],
         "evidence": []
       }
+    },
+    {
+      "letter": "ae",
+      "kind": "must_pass",
+      "reason": "page with empty breakdowns and grouped who/evidence entries whose quotes are in the canned corpus",
+      "kind_check": "page-data",
+      "page": {
+        "pageVersion": 1,
+        "page": "selftest-ae",
+        "title": "selftest ae",
+        "items": [],
+        "phases": [],
+        "breakdowns": [],
+        "who": [
+          { "key": "w1", "group": "g1", "label": "who g1", "source": { "doc": "x", "page": 1, "quote": "The Hawaiʻi allocation is $100 exactly" } },
+          { "key": "w2", "group": "g2", "label": "who g2", "source": { "doc": "y", "page": 1, "quote": "Coverage started in 2024 and covers 42 counties" } }
+        ],
+        "evidence": [
+          { "type": "e1", "group": "g1", "source": { "doc": "x", "page": 1, "quote": "The Hawaiʻi allocation is $100 exactly" } },
+          { "type": "e2", "group": "g2", "source": { "doc": "y", "page": 1, "quote": "Coverage started in 2024 and covers 42 counties" } }
+        ]
+      }
+    },
+    {
+      "letter": "af",
+      "kind": "must_fail",
+      "reason": "page whose one phases entry quote is not in the canned corpus",
+      "kind_check": "page-data",
+      "page": {
+        "pageVersion": 1,
+        "page": "selftest-af",
+        "title": "selftest af",
+        "items": [],
+        "phases": [
+          { "key": "p1", "label": "phase 1", "value": "v", "source": { "doc": "x", "page": 1, "quote": "THIS PHASES QUOTE IS NOT IN THE CANNED CORPUS AT ALL" } }
+        ],
+        "breakdowns": [],
+        "who": [],
+        "evidence": []
+      }
     }
   ]
 }

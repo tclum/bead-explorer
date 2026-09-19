@@ -51,3 +51,33 @@ body {
     scroll-behavior: auto !important;
   }
 }
+
+@media print {
+  :root {
+    --color-ink-950: #ffffff;
+    --color-ink-900: #ffffff;
+    --color-ink-800: #dcd6c8;
+    --color-ink-700: #b8b1a2;
+    --color-paper: #0b0d10;
+    --color-paper-2: #333333;
+    --color-paper-3: #555555;
+    --color-teal: #0e6e5f;
+    --color-amber: #7a4b00;
+    --color-rose: #a02020;
+  }
+  html,
+  body {
+    background: #ffffff !important;
+    background-image: none !important;
+    color: var(--color-paper);
+  }
+  nav,
+  footer,
+  .no-print {
+    display: none !important;
+  }
+  a {
+    color: var(--color-teal);
+    text-decoration: none;
+  }
+}

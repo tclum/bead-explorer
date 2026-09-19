@@ -142,8 +142,17 @@ export type PageBreakdown = {
   total_key?: string;
   rows: PageBreakdownRow[];
 };
-export type PageWho = { key: string; label: string; source: PageSource };
-export type PageEvidence = { type: string; source: PageSource };
+export type PageWho = {
+  key: string;
+  label: string;
+  group?: string;
+  source: PageSource;
+};
+export type PageEvidence = {
+  type: string;
+  group?: string;
+  source: PageSource;
+};
 export type PageCalculatorOfferor = {
   id: string;
   requested_musd: number;

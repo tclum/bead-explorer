@@ -1,6 +1,6 @@
 # Three-minute walkthrough
 
-Doc rev 2026-09-18b.
+Doc rev 2026-09-19a.
 
 1. Open the site. Read the header line and the disclaimer. The whole page is built from eleven public documents and two public datasets; the corpus list at the bottom shows each one's hash and fetch time.
 2. Expand the receipt on the "BEAD allocation" tile. The quote is the sentence from Initial Proposal Volume 2, page 105 (PDF page), and the link opens the PDF at that page.
@@ -11,3 +11,5 @@ Doc rev 2026-09-18b.
 7. In a terminal in the repo, run `pnpm eval --selftest`. Line one is `RESULT: pass` because every deliberately broken case went red. Run `pnpm smoke https://bead.forpono.com`: line two prints the deployed and local commit SHAs, and the probes only count if they match.
 8. Open `/challenge`. Read the three sum lines under the breakdown tables: two breakdowns match the stated total of 37,593; the challenge-type breakdown does not — its six published row counts sum to 37,595, and the page says so in amber.
 9. Open `/selection`. Scroll to "Run the published formula" and change Offeror B's requested funding from 25 to 30; Part 1 for B drops from 80 to 66.7 and Offeror A becomes the best-scored on that column. Press "Reset to the Final Proposal's examples" and the document's own numbers — 100, 80, 57.1 down the Part 1 column — return.
+10. Open `/oversight`. Read the risk tiers: what puts a subgrantee into medium or high risk, and what that changes in site-visit frequency, desk reviews, and reimbursement.
+11. Open `/report` and press "Print or save as PDF". The print preview is light, receipts are inline (no expand-to-see), and the build SHA is on the first line so the printout is versioned.

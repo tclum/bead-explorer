@@ -26,6 +26,13 @@ FCC, or any vendor. Public data only.
 - **`/selection`** — Subgrantee selection: tiles, five-phase timeline, three
   rubric breakdowns, a scoring calculator, the technology outcome, how the
   process was run, and the formulas and rules, plus the Ask box.
+- **`/oversight`** — Oversight and accountability: monitoring cadence, risk
+  tiers, how reimbursement is earned, and the state's Final and Initial
+  Proposal commitments, each with its receipt.
+- **`/report`** — Receipted report: every figure and quoted commitment shown
+  anywhere on this site, with its source, in one printable document.
+  Generated from the same committed data files the pages read; `pnpm smoke`
+  asserts every receipt on the site appears on it.
 
 The scoring calculator on `/selection` runs the Final Proposal's published
 Part 1, Part 2, and Speed to Deployment formulas (pages 25–26) in the
